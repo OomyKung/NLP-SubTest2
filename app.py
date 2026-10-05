@@ -10,7 +10,7 @@ How it works:
     3. Embed each chunk with sentence-transformers (all-MiniLM-L6-v2)
     4. Store the vectors in a FAISS index (built once on startup, then cached)
     5. For every question: embed it, retrieve the top-k most similar chunks,
-       and ask Llama 3.3 70B (via Groq) to answer ONLY from those chunks.
+       and ask Qwen 3.8 27B (via Groq) to answer ONLY from those chunks.
 
 Run locally:
     streamlit run app.py
@@ -61,7 +61,10 @@ FOLLOWUP_WORDS_THAI = ("มัน", "นี้", "นั้น", "ดังก�
 
 # Models
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-LLM_MODEL = "llama-3.3-70b-versatile"
+# The brief asked for llama-3.3-70b-versatile, but Groq has retired it.
+# Qwen 3.8 27B was tested on the same RAG prompts: it cites file names,
+# answers in Thai and English, and replies with the "not found" message correctly.
+LLM_MODEL = "qwen/qwen3.8-27b"
 LLM_TEMPERATURE = 0.1
 LLM_MAX_TOKENS = 1024
 
@@ -879,7 +882,7 @@ def render_hero(compact: bool) -> None:
             <div class="ng-pills">
                 <span class="ng-pill">🧠 {EMBEDDING_MODEL}</span>
                 <span class="ng-pill">🗂️ FAISS vector search</span>
-                <span class="ng-pill">🦙 Llama 3.3 70B · Groq</span>
+                <span class="ng-pill">⚡ Qwen 3.8 27B · Groq</span>
             </div>
         </div>
     """)

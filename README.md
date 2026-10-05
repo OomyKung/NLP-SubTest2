@@ -9,7 +9,7 @@ and shows the exact passages it retrieved, so you can check every answer.
 | User interface   | Streamlit (custom CSS, chat UI)              |
 | Embedding model  | `sentence-transformers/all-MiniLM-L6-v2`     |
 | Vector database  | FAISS (`IndexFlatIP`, cosine similarity)     |
-| LLM              | `llama-3.3-70b-versatile` via the Groq API   |
+| LLM              | `qwen/qwen3.8-27b` via the Groq API          |
 | Knowledge base   | 37 CCNA topic documents (`data/*.txt`)       |
 
 ---
@@ -55,7 +55,7 @@ and shows the exact passages it retrieved, so you can check every answer.
 │    ├─▶ 6. Embed the question  (same model)                 │
 │    ├─▶ 7. FAISS search        (top-k = 5)                  │
 │    ├─▶ 8. Build context       ([Source n: FILE.txt] ...)   │
-│    └─▶ 9. Groq LLM            (llama-3.3-70b-versatile)    │
+│    └─▶ 9. Groq LLM            (qwen/qwen3.8-27b)           │
 └────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -78,7 +78,7 @@ flowchart LR
     F --> G{FAISS top-5 search}
     E --> G
     G --> H[Context with source labels]
-    H --> I[Groq: llama-3.3-70b-versatile]
+    H --> I[Groq: qwen/qwen3.8-27b]
     I --> J[Answer + sources in Streamlit]
 ```
 
@@ -103,7 +103,13 @@ flowchart LR
    still retrieves `SNMP.txt`.
 7. **Prompting**: the retrieved chunks are labelled with their source file (e.g. `[Source 1: OSPF.txt]`) and placed
    in the system prompt, together with the rules below.
-8. **Generation**: Groq runs `llama-3.3-70b-versatile` (temperature 0.1) and returns the answer, which cites its sources.
+8. **Generation**: Groq runs `qwen/qwen3.8-27b` (temperature 0.1) and returns the answer, which cites its sources.
+
+> **Why not Llama 3.3 70B?** The original brief specified `llama-3.3-70b-versatile`, but Groq has retired it (the API
+> returns *404 model_not_found*). `qwen/qwen3.8-27b` and `openai/gpt-oss-120b` were both tested on the same RAG
+> prompts. Both answered correctly and returned `ไม่พบข้อมูลในเอกสารที่มี` for out-of-scope questions. Qwen was chosen
+> because it cites the source file name (e.g. `[Source 1: STP.txt]`), keeps Thai answers fully in Thai, and responds faster.
+> To switch models, change `LLM_MODEL` in `app.py`.
 9. **Display**: the answer is shown with response time, chunk count, referenced documents, the *Sources Used* cards and
    the *Retrieval Panel*.
 
@@ -289,7 +295,7 @@ All settings are constants at the top of `app.py`:
 | `MIN_SIMILARITY`  | `0.20`                    | Chunks below this cosine similarity are dropped |
 | `FOLLOWUP_THRESHOLD` | `0.45`                 | Below this best score, the previous question is added to the search |
 | `EMBEDDING_MODEL` | `all-MiniLM-L6-v2`        | sentence-transformers model                     |
-| `LLM_MODEL`       | `llama-3.3-70b-versatile` | Groq model                                      |
+| `LLM_MODEL`       | `qwen/qwen3.8-27b`        | Groq model                                      |
 | `LLM_TEMPERATURE` | `0.1`                     | Low temperature for factual answers             |
 
 ---
