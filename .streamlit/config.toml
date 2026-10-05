@@ -8,10 +8,6 @@ font = "sans serif"
 
 [server]
 headless = true
-# Turn off the source-file watcher. Its module scan touches optional parts of
-# `transformers` that need `torchvision` (not installed), which only fills the
-# logs with a harmless ModuleNotFoundError. After pushing new code, reboot the app.
-fileWatcherType = "none"
 
 [browser]
 gatherUsageStats = false

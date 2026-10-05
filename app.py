@@ -675,11 +675,25 @@ def embed(texts: list[str]) -> np.ndarray:
     return np.asarray(vectors, dtype="float32")
 
 
-@st.cache_resource(show_spinner="Building the FAISS vector index…")
-def build_knowledge_base() -> dict:
+def data_fingerprint() -> tuple:
+    """
+    Name, size and modification time of every document. Used as the cache key
+    of build_knowledge_base(), so the index is rebuilt automatically when files
+    in /data are added, removed or edited (e.g. after a git push), with no reboot.
+    """
+    return tuple(
+        (path.name, path.stat().st_size, path.stat().st_mtime_ns)
+        for path in sorted(DATA_DIR.glob("*.txt"))
+    )
+
+
+# max_entries=1: keep only the newest index in memory when the data changes
+@st.cache_resource(show_spinner="Building the FAISS vector index…", max_entries=1)
+def build_knowledge_base(fingerprint: tuple = ()) -> dict:
     """
     Load documents, split them into chunks, embed the chunks and
-    store them in a FAISS index. Runs once when the app starts.
+    store them in a FAISS index. Runs once when the app starts, and again
+    only if `fingerprint` (see data_fingerprint) changes.
     """
     documents = load_documents(DATA_DIR)
 
@@ -1240,12 +1254,13 @@ def load_test_questions() -> list[dict]:
         return list(csv.DictReader(file))
 
 
-@st.cache_data(show_spinner="Running the retrieval evaluation…")
-def run_retrieval_evaluation(_kb: dict) -> dict:
+@st.cache_data(show_spinner="Running the retrieval evaluation…", max_entries=1)
+def run_retrieval_evaluation(_kb: dict, fingerprint: tuple = ()) -> dict:
     """
     Run every test question through retrieve() only (no LLM, so no API cost).
     For answerable questions, check where the expected document appears in
-    the top-k chunks. The leading underscore tells Streamlit not to hash _kb.
+    the top-k chunks. The leading underscore tells Streamlit not to hash _kb;
+    `fingerprint` (documents + CSV) makes the results refresh when files change.
     """
     rows = []
     for item in load_test_questions():
@@ -1311,7 +1326,8 @@ def render_evaluation_view(kb: dict) -> None:
                      "Add the file next to app.py to see the evaluation.")
         return
 
-    report = run_retrieval_evaluation(kb)
+    csv_stat = TEST_QUESTIONS_FILE.stat()
+    report = run_retrieval_evaluation(kb, data_fingerprint() + ((csv_stat.st_size, csv_stat.st_mtime_ns),))
     m = report["metrics"]
     n = max(m["answerable"], 1)
     render_html(f"""
@@ -1435,7 +1451,7 @@ def main() -> None:
 
     # Build (or load from cache) the vector index
     try:
-        kb = build_knowledge_base()
+        kb = build_knowledge_base(data_fingerprint())
     except (FileNotFoundError, ValueError) as exc:
         render_alert("error", "📂", "Knowledge base could not be loaded", esc(exc))
         st.stop()
