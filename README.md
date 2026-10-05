@@ -243,6 +243,11 @@ Get a free key at <https://console.groq.com/keys>. The app also accepts a `GROQ_
 
 To change the key later, open **App settings → Secrets**, save, and **Reboot** the app.
 
+**After pushing new code**, open **Manage app → Reboot app**. The file watcher is turned off in `.streamlit/config.toml`
+(`fileWatcherType = "none"`), so the running app does not reload changes by itself. It is off because Streamlit's module scan
+touches optional parts of `transformers` that need `torchvision`, which only fills the logs with a harmless
+`ModuleNotFoundError`.
+
 **Why CPU-only PyTorch?** `requirements.txt` installs `torch` from the PyTorch CPU wheel index. Streamlit Cloud has
 no GPU, and the CPU build is much smaller, so installs are faster and stay within the memory limit.
 
