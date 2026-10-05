@@ -26,7 +26,7 @@ from pathlib import Path
 import faiss
 import numpy as np
 import streamlit as st
-from groq import APIConnectionError, AuthenticationError, Groq, RateLimitError
+from groq import APIConnectionError, AuthenticationError, Groq, NotFoundError, RateLimitError
 from sentence_transformers import SentenceTransformer
 
 
@@ -758,6 +758,11 @@ def friendly_error(exc: Exception) -> str:
         return "The Groq rate limit was reached. Please wait a moment and try again."
     if isinstance(exc, APIConnectionError):
         return "Could not connect to the Groq API. Check your internet connection."
+    if isinstance(exc, NotFoundError):
+        return (
+            f"The model '{LLM_MODEL}' is not available on Groq (it may have been retired). "
+            "Change LLM_MODEL in app.py to a model listed at console.groq.com/docs/models."
+        )
     return f"Unexpected error: {exc}"
 
 
