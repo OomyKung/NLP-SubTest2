@@ -1,0 +1,82 @@
+Number Systems (Binary, Decimal, and Hexadecimal)
+
+Networking devices work with binary numbers, but people read addresses in decimal and hexadecimal. CCNA students must convert quickly between these number systems to understand IPv4 addresses, subnet masks, MAC addresses, and IPv6 addresses. Decimal is base 10, binary is base 2, and hexadecimal is base 16.
+
+Number systems key terms:
+- Bit: one binary digit, either 0 or 1.
+- Octet: a group of 8 bits. An IPv4 address has 4 octets, 32 bits in total.
+- Nibble: a group of 4 bits. One nibble equals exactly one hexadecimal digit.
+- Base (radix): how many digits a number system uses. Binary uses 2 digits, decimal uses 10, hexadecimal uses 16.
+- Place value: the value of a digit position. Each position is the base raised to a power.
+
+Number systems binary place values:
+The place values for one octet, from left to right, are 128, 64, 32, 16, 8, 4, 2, and 1. These are the powers of 2 from 2^7 down to 2^0. To find the decimal value of an octet, add the place values of every position that holds a 1. If all eight bits are 1, the value is 128+64+32+16+8+4+2+1 = 255, so one octet can hold values from 0 to 255.
+
+Number systems: converting binary to decimal:
+1. Write the place values 128 64 32 16 8 4 2 1 above the 8 bits.
+2. Keep only the place values where the bit is 1.
+3. Add those values together.
+Example: binary 11110000 = 128+64+32+16 = 240. Binary 10101000 = 128+32+8 = 168. Binary 00001010 = 8+2 = 10.
+
+Number systems: converting decimal to binary (subtraction method):
+1. Start at the 128 position.
+2. If the number is greater than or equal to the place value, write 1 and subtract that value. Otherwise write 0.
+3. Move to the next place value and repeat until the 1 position.
+Example for 168: 168-128=40 (1), 64 no (0), 40-32=8 (1), 16 no (0), 8-8=0 (1), then 4, 2, 1 are 0. Result: 10101000.
+Example for 192: 192-128=64 (1), 64-64=0 (1), the rest are 0. Result: 11000000.
+
+Number systems: division by 2 method:
+Another way to convert decimal to binary is to divide by 2 repeatedly and write down each remainder. Read the remainders from bottom to top. Example for 10: 10/2=5 r0, 5/2=2 r1, 2/2=1 r0, 1/2=0 r1. Reading upward gives 1010, padded to 8 bits as 00001010. The same idea works for hexadecimal by dividing by 16.
+
+Number systems: IPv4 address to binary example:
+The IPv4 address 192.168.10.1 is written in dotted decimal, with four octets separated by dots. Converting each octet gives:
+- 192 = 11000000
+- 168 = 10101000
+- 10 = 00001010
+- 1 = 00000001
+So 192.168.10.1 = 11000000.10101000.00001010.00000001. Routers and hosts always process the 32-bit binary form.
+
+Number systems and subnet masks:
+A subnet mask is a string of contiguous 1 bits followed by 0 bits. The prefix length counts the 1 bits. For example, /24 = 11111111.11111111.11111111.00000000 = 255.255.255.0. Common mask octet values are 128, 192, 224, 240, 248, 252, 254, and 255. For example, 11100000 = 224 and 11111100 = 252, so /27 is 255.255.255.224 and /30 is 255.255.255.252.
+
+Number systems: hexadecimal basics:
+Hexadecimal (hex) uses 16 digits: 0 to 9 and A to F, where A=10, B=11, C=12, D=13, E=14, and F=15. Because 16 is 2^4, one hex digit represents exactly 4 bits (a nibble), and two hex digits represent one byte. Hex is often written with the prefix 0x, for example 0xA8. Hex values from 0 to F in binary run from 0000 to 1111.
+
+Number systems: converting between hex, binary, and decimal:
+- Binary to hex: split the byte into two nibbles and convert each. 10101000 = 1010 1000 = A8.
+- Hex to decimal: multiply the left digit by 16 and add the right digit. 0xA8 = 10x16 + 8 = 168.
+- Decimal to hex: divide by 16. 255/16 = 15 remainder 15, so 255 = FF.
+- More examples: 192 = 0xC0 and 10 = 0x0A.
+
+Number systems in MAC and IPv6 addresses:
+A MAC address is 48 bits written as 12 hex digits, for example 0050.56C0.00A8 on Cisco devices or 00-50-56-C0-00-A8 on Windows. An IPv6 address is 128 bits written as 32 hex digits in eight groups of four, called hextets, for example 2001:0DB8:ACAD:0001:0000:0000:0000:0001. Each hextet is 16 bits. Hex is case-insensitive, so A8 and a8 mean the same value.
+
+Number systems common mistakes:
+- Forgetting to pad binary to 8 bits. Decimal 10 is 00001010 in an octet, not 1010.
+- Mixing up place values. The leftmost bit of an octet is 128, not 256.
+- Treating hex letters as decimal. 0x10 is 16 in decimal, not 10.
+- Writing a mask with non-contiguous 1 bits, such as 11110100, which is not a valid mask.
+
+CCNA exam tips for number systems:
+- Memorize 128 64 32 16 8 4 2 1 and the mask values 128, 192, 224, 240, 248, 252, 254, 255.
+- One octet ranges from 0 to 255, and one hex digit equals 4 bits.
+- IPv4 is 32 bits in dotted decimal, MAC is 48 bits in hex, IPv6 is 128 bits in hex.
+
+Common questions about number systems:
+Q: What is 192 in binary?
+A: Decimal 192 is 11000000 in binary, because 128 + 64 = 192.
+
+Q: What is binary 11110000 in decimal?
+A: Binary 11110000 is 240 in decimal, because 128 + 64 + 32 + 16 = 240.
+
+Q: How many bits does one hexadecimal digit represent?
+A: One hexadecimal digit represents 4 bits, which is called a nibble.
+
+Q: What is 0xA8 in decimal?
+A: Hex A8 is 168 in decimal, because 10 x 16 + 8 = 168.
+
+Q: What is the binary form of a /24 subnet mask?
+A: A /24 mask is 11111111.11111111.11111111.00000000, which is 255.255.255.0.
+
+Q: What is the largest value of one octet?
+A: The largest value is 255, which is 11111111 in binary and FF in hexadecimal.

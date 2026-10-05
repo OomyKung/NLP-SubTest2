@@ -1,0 +1,109 @@
+Basic Device Configuration (Cisco IOS Switch and Router)
+
+Basic device configuration is the first task on every new Cisco switch or router: access the device, move between Cisco IOS command modes, set passwords, give it management IP settings, and save the configuration.
+
+Basic device configuration access methods:
+- Console: a rollover (console) cable from the PC to the console port. It needs no IP settings, so it is used for the first setup.
+- SSH: secure, encrypted remote access on TCP port 22.
+- Telnet: remote access on TCP port 23. Passwords are sent in plain text.
+- AUX: legacy modem port.
+
+Basic device configuration IOS command modes:
+- User EXEC mode (prompt Switch>): limited monitoring commands only.
+- Privileged EXEC mode (prompt Switch#): all show, copy, and reload commands. Enter it with "enable".
+- Global configuration mode (prompt Switch(config)#): enter with "configure terminal".
+- Line configuration mode (Switch(config-line)#): for console and VTY lines.
+- Interface configuration mode (Switch(config-if)#): for one interface.
+"exit" moves back one level. "end" or Ctrl+Z returns directly to privileged EXEC mode.
+
+Basic device configuration CLI help and shortcuts:
+- "?" lists the available commands or the next keyword, for example "show ?".
+- Tab completes a partially typed command. Commands can be abbreviated, for example "conf t".
+- Ctrl+Shift+6 breaks a running ping, traceroute, or DNS lookup.
+
+Basic device configuration hostname and password rules:
+A hostname must start with a letter, contain no spaces, end with a letter or digit, use only letters, digits, and dashes, and be less than 64 characters long.
+"enable secret" protects privileged EXEC mode with a strong hash and is preferred over "enable password". "service password-encryption" encrypts plain-text passwords in the configuration with weak type 7 encryption. "banner motd" displays a legal warning at login.
+
+Basic device configuration running-config vs startup-config:
+The running-config is stored in RAM and is the active configuration. It is lost at power loss or reload. The startup-config is stored in NVRAM and is loaded at boot.
+- "copy running-config startup-config" saves the active configuration.
+- "show running-config" and "show startup-config" display them.
+- "reload" restarts the device. Unsaved changes are lost.
+- "erase startup-config" followed by "reload" returns the device to default settings.
+
+Basic device configuration Packet Tracer walkthrough:
+Topology: PC1 connects to S1 F0/1. S1 G0/1 connects to R1 G0/0/0. Network 192.168.1.0/24. R1 is 192.168.1.1 (default gateway), S1 management is 192.168.1.2, PC1 is 192.168.1.10.
+
+Step 1, basic switch settings:
+Switch> enable
+Switch# configure terminal
+Switch(config)# hostname S1
+S1(config)# enable secret class
+S1(config)# line console 0
+S1(config-line)# password cisco
+S1(config-line)# login
+S1(config-line)# line vty 0 15
+S1(config-line)# password cisco
+S1(config-line)# login
+S1(config-line)# exit
+S1(config)# service password-encryption
+S1(config)# banner motd #Authorized access only#
+
+Step 2, switch management SVI and default gateway:
+S1(config)# interface vlan 1
+S1(config-if)# ip address 192.168.1.2 255.255.255.0
+S1(config-if)# no shutdown
+S1(config-if)# exit
+S1(config)# ip default-gateway 192.168.1.1
+S1(config)# end
+S1# copy running-config startup-config
+A Layer 2 switch is managed through the switch virtual interface (SVI) for VLAN 1. The default gateway lets it be managed from other networks.
+
+Step 3, basic router settings:
+Router(config)# hostname R1
+R1(config)# enable secret class
+R1(config)# interface g0/0/0
+R1(config-if)# description Link to S1 LAN
+R1(config-if)# ip address 192.168.1.1 255.255.255.0
+R1(config-if)# ipv6 address 2001:db8:acad:1::1/64
+R1(config-if)# no shutdown
+R1(config-if)# end
+R1# copy running-config startup-config
+Router interfaces are administratively down by default and need "no shutdown". Switch ports are enabled by default.
+
+Step 4, end device: on PC1 set IP 192.168.1.10, mask 255.255.255.0, and gateway 192.168.1.1 manually, or choose DHCP. On Windows, "ipconfig" shows the IP, mask, and gateway; "ipconfig /all" adds the MAC address and DNS servers.
+
+Basic device configuration verification:
+Commands: show ip interface brief, show interfaces, show ipv6 interface brief, show version.
+R1# show ip interface brief
+Interface  IP-Address   OK? Method Status                Protocol
+G0/0/0     192.168.1.1  YES manual up                    up
+G0/0/1     unassigned   YES unset  administratively down down
+Look for "up up". "administratively down" means "no shutdown" is missing.
+
+Basic device configuration troubleshooting:
+- Cannot ping the switch SVI: check "no shutdown" on interface vlan 1 and that a port in VLAN 1 is up.
+- Switch unreachable from another network: "ip default-gateway" is missing or wrong.
+- Configuration lost after reload: it was not saved to NVRAM.
+
+CCNA exam tips for basic device configuration:
+- Know every prompt: >, #, (config)#, (config-line)#, (config-if)#.
+- running-config is in RAM, startup-config is in NVRAM.
+- A Layer 2 switch is managed through an SVI plus "ip default-gateway".
+
+Common questions about basic device configuration:
+Q: How do you enter global configuration mode on a Cisco device?
+A: Type "enable" to reach privileged EXEC mode, then "configure terminal".
+
+Q: How do you save the configuration on a Cisco switch or router?
+A: Use "copy running-config startup-config" to copy the RAM configuration to NVRAM.
+
+Q: How do you give a Layer 2 switch a management IP address?
+A: Configure "interface vlan 1" with an IP address, mask, and "no shutdown", then set "ip default-gateway".
+
+Q: What is the difference between running-config and startup-config?
+A: The running-config is the active configuration in RAM; the startup-config is saved in NVRAM and loaded at boot.
+
+Q: Why is a router interface down after configuring an IP address?
+A: Router interfaces are shut down by default, so you must enter "no shutdown".

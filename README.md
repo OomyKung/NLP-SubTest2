@@ -10,7 +10,7 @@ and shows the exact passages it retrieved, so you can check every answer.
 | Embedding model  | `sentence-transformers/all-MiniLM-L6-v2`     |
 | Vector database  | FAISS (`IndexFlatIP`, cosine similarity)     |
 | LLM              | `qwen/qwen3.8-27b` via the Groq API          |
-| Knowledge base   | 37 CCNA topic documents (`data/*.txt`)       |
+| Knowledge base   | 48 CCNA topic documents (`data/*.txt`)       |
 
 ---
 
@@ -47,7 +47,7 @@ and shows the exact passages it retrieved, so you can check every answer.
 ┌────────────────────────────────────────────────────────────┐
 │ STARTUP  (runs once, cached with st.cache_resource)        │
 ├────────────────────────────────────────────────────────────┤
-│ data/*.txt  (37 CCNA topic documents)                      │
+│ data/*.txt  (48 CCNA topic documents)                      │
 │    │                                                       │
 │    ├─▶ 1. Load .txt files                                  │
 │    ├─▶ 2. Clean text                                       │
@@ -156,7 +156,7 @@ NetGuide-AI/
 ├── app.py                        # Streamlit app: document processing, FAISS, retrieval, Groq, UI
 ├── requirements.txt              # Python dependencies (CPU-only PyTorch)
 ├── README.md                     # This file
-├── test_questions.csv            # 55 evaluation questions (5 intentionally unanswerable)
+├── test_questions.csv            # 70 evaluation questions (5 intentionally unanswerable)
 ├── .gitignore                    # Keeps secrets.toml and virtual environments out of git
 ├── .streamlit/
 │   ├── config.toml               # Dark theme + server settings
@@ -169,12 +169,22 @@ NetGuide-AI/
     └── VLAN.txt
 ```
 
-### Knowledge-base topics
+### Knowledge-base coverage: Cisco NetAcad CCNA 1–3
 
-Network Fundamentals · OSI Model · TCP/IP · Ethernet · MAC Addressing · ARP · IPv4 · Subnetting · IPv6 ·
-VLAN · Trunking · Inter-VLAN Routing · STP · RSTP · EtherChannel · CDP/LLDP · IP Routing · Static Routing ·
-OSPF · EIGRP · FHRP (HSRP/VRRP/GLBP) · DHCP · DNS · NAT · ACL · WLAN · SSH · Syslog · SNMP · NTP ·
-Network Security · Device Hardening · QoS · Network Automation · JSON · REST APIs · Network Troubleshooting
+The 48 documents cover every module of the three Cisco Networking Academy CCNAv7 courses, so the bot is useful both
+for the CCNA 200-301 exam and for NetAcad course exams and competitions (e.g. NetAcad Riders), where Packet Tracer
+configuration matters. Config-heavy topics include full IOS examples with verification commands.
+
+| Course | Module → document(s) |
+| ------ | -------------------- |
+| **CCNA 1 – ITN**<br>Introduction to Networks | 1 Networking Today → `Network_Fundamentals` · 2 Basic Switch & End Device Config → `Basic_Device_Configuration` · 3 Protocols & Models → `OSI_Model`, `TCP_IP` · 4 Physical Layer → `Physical_Layer` · 5 Number Systems → `Number_Systems` · 6 Data Link Layer → `Ethernet` · 7 Ethernet Switching → `Ethernet`, `MAC_Addressing` · 8 Network Layer → `IPv4`, `IPv6`, `IP_Routing` · 9 Address Resolution → `ARP`, `IPv6` · 10 Basic Router Config → `Basic_Device_Configuration` · 11 IPv4 Addressing → `IPv4`, `Subnetting` · 12 IPv6 Addressing → `IPv6` · 13 ICMP → `ICMP` · 14 Transport Layer → `TCP_IP` · 15 Application Layer → `Application_Layer`, `DNS`, `DHCP` · 16 Network Security Fundamentals → `Network_Security`, `Device_Hardening` · 17 Build a Small Network → `Network_Design`, `Network_Troubleshooting` |
+| **CCNA 2 – SRWE**<br>Switching, Routing & Wireless Essentials | 1 Basic Device Config → `Basic_Device_Configuration`, `SSH` · 2 Switching Concepts → `MAC_Addressing`, `Ethernet` · 3 VLANs → `VLAN`, `Trunking` · 4 Inter-VLAN Routing → `InterVLAN_Routing` · 5 STP → `STP`, `RSTP` · 6 EtherChannel → `EtherChannel` · 7 DHCPv4 → `DHCP` · 8 SLAAC & DHCPv6 → `SLAAC_DHCPv6` · 9 FHRP → `FHRP` · 10 LAN Security Concepts → `Network_Security` · 11 Switch Security Config → `Device_Hardening`, `DHCP` (snooping), `ARP` (DAI) · 12–13 WLAN → `WLAN` · 14 Routing Concepts → `IP_Routing` · 15–16 Static Routing → `Static_Routing` |
+| **CCNA 3 – ENSA**<br>Enterprise Networking, Security & Automation | 1–2 OSPFv2 → `OSPF` · 3 Network Security Concepts → `Network_Security` · 4–5 ACLs → `ACL` · 6 NAT → `NAT` · 7 WAN Concepts → `WAN_Concepts` · 8 VPN & IPsec → `VPN_IPsec` · 9 QoS → `QoS` · 10 Network Management → `Network_Management`, `CDP_LLDP`, `NTP`, `SNMP`, `Syslog` · 11 Network Design → `Network_Design` · 12 Troubleshooting → `Network_Troubleshooting` · 13 Virtualization → `Network_Virtualization` · 14 Automation → `Network_Automation`, `JSON`, `REST_APIs` |
+
+`EIGRP.txt` is kept as extra material (it appears in older CCNA versions).
+
+> **Note on document count:** the original brief asked for 30–40 documents. The knowledge base was extended to 48 so that every
+> NetAcad module has a focused document. One topic per file gives more precise retrieval than merging topics together.
 
 Each document is about 4,500–6,000 characters and follows the same layout, designed for retrieval:
 
@@ -271,7 +281,7 @@ no GPU, and the CPU build is much smaller, so installs are faster and stay withi
 | What is SNMP? → *Which ports does it use?* (follow-up)   | `SNMP.txt`                 |
 | How do you configure BGP route reflectors? *(no answer)* | → `ไม่พบข้อมูลในเอกสารที่มี` |
 
-The full list of 55 questions is in [`test_questions.csv`](test_questions.csv), with these columns:
+The full list of 70 questions is in [`test_questions.csv`](test_questions.csv), with these columns:
 
 | Column                    | Meaning                                                    |
 | ------------------------- | ---------------------------------------------------------- |
@@ -288,13 +298,13 @@ the app's own `retrieve()` function, to check whether its `expected_source` docu
 
 | Metric                                             | Result                  |
 | -------------------------------------------------- | ----------------------- |
-| Expected document in top 5 (answerable questions)  | **50 / 50**             |
-| Expected document ranked #1                        | **46 / 50**             |
-| Mean Reciprocal Rank (MRR)                         | **0.96**                |
+| Expected document in top 5 (answerable questions)  | **65 / 65**             |
+| Expected document ranked #1                        | **58 / 65**             |
+| Mean Reciprocal Rank (MRR)                         | **0.94**                |
 | Follow-up questions resolved with the previous one | **5 / 5**               |
-| Knowledge-base size                                | 37 documents, 420 chunks |
+| Knowledge-base size                                | 48 documents, 568 chunks |
 
-The 5 unanswerable questions retrieve only loosely related chunks (average best similarity about 0.36, vs 0.62 for
+The 5 unanswerable questions retrieve only loosely related chunks (average best similarity about 0.39, vs 0.63 for
 answerable questions). The system prompt then makes the LLM refuse (`ไม่พบข้อมูลในเอกสารที่มี`, shown in English as
 *"No information was found in the available documents."* for English questions). Click the 🧪 questions
 in the sidebar to see this live. In a live test with Groq, all 5 were refused correctly.

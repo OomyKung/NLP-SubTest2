@@ -1,0 +1,92 @@
+VPN and IPsec (Virtual Private Networks)
+
+A Virtual Private Network (VPN) is a private, encrypted connection built across a public network such as the internet, without a dedicated physical link. IPsec is the standard framework used to secure VPN traffic at Layer 3.
+
+VPN benefits:
+- Cost savings: organizations use the cheap internet instead of expensive leased lines.
+- Security: encryption and authentication protect the data from attackers.
+- Scalability: new sites and users can be added without new physical links.
+- Compatibility: VPNs work over many access types such as DSL, cable, fiber, and cellular.
+
+VPN types, site-to-site and remote-access:
+- Site-to-site VPN: connects whole networks, such as a branch and the head office. VPN gateways (routers or firewalls) build the tunnel, and hosts are unaware of it.
+- Remote-access VPN: connects a single user, such as a teleworker, to the company network.
+- Client-based remote-access VPN: the user runs VPN client software such as Cisco AnyConnect (IPsec or SSL).
+- Clientless remote-access VPN: the user connects through a web browser with SSL/TLS (HTTPS).
+
+Enterprise VPN options:
+- GRE over IPsec: GRE carries multicast and routing protocol traffic, and IPsec then encrypts the GRE packets.
+- DMVPN (Dynamic Multipoint VPN): a Cisco solution for many sites. Spokes connect to a hub, and spoke-to-spoke tunnels are built dynamically when needed. It uses multipoint GRE, NHRP, and IPsec.
+- IPsec VTI (Virtual Tunnel Interface): a routable tunnel interface that carries unicast and multicast traffic, encrypted by IPsec without GRE.
+
+GRE (Generic Routing Encapsulation):
+GRE is a simple tunneling protocol developed by Cisco that uses IP protocol number 47. It can carry multicast traffic and routing protocols such as OSPF and EIGRP. GRE is NOT encrypted by itself, so it is combined with IPsec for security. GRE adds 24 bytes of overhead: a new 20-byte IP header and a 4-byte GRE header.
+
+GRE tunnel configuration example:
+R1(config)# interface tunnel 0
+R1(config-if)# tunnel mode gre ip
+R1(config-if)# ip address 10.10.10.1 255.255.255.252
+R1(config-if)# tunnel source 209.165.200.225
+R1(config-if)# tunnel destination 198.51.100.2
+The tunnel source is the local public interface or IP and the tunnel destination is the public IP of the remote router. The other router reverses source and destination and uses 10.10.10.2.
+
+GRE tunnel verification:
+R1# show interface tunnel 0
+Tunnel0 is up, line protocol is up
+  Internet address is 10.10.10.1/30
+  Tunnel source 209.165.200.225, destination 198.51.100.2
+  Tunnel protocol/transport GRE/IP
+Look for up/up, the correct source and destination, and GRE/IP as the transport. OSPF can then form neighbors across the tunnel.
+
+IPsec framework:
+IPsec is an open standard framework with four building blocks:
+- Confidentiality: encryption with DES, 3DES, or AES. AES is recommended; DES and 3DES are old and weak.
+- Integrity: a hash with MD5 or SHA proves the data was not changed. SHA is recommended.
+- Origin authentication: peers prove their identity with a pre-shared key (PSK) or RSA digital certificates.
+- Diffie-Hellman (DH): creates shared keys over an unsecured network. DH groups 1, 2, and 5 are weak; groups 14 and higher are recommended.
+
+IPsec protocols AH and ESP:
+- AH (Authentication Header) is IP protocol 51. It gives integrity and authentication but NO encryption.
+- ESP (Encapsulating Security Payload) is IP protocol 50. It gives encryption, integrity, and authentication.
+- IKE (Internet Key Exchange) negotiates the security associations and uses UDP port 500.
+- NAT-T (NAT Traversal) wraps ESP in UDP port 4500 so IPsec can pass through a NAT device.
+
+How an IPsec site-to-site tunnel is built:
+1. Interesting traffic that must be protected arrives at the VPN gateway.
+2. IKE Phase 1: the peers authenticate each other and build a secure management tunnel using DH.
+3. IKE Phase 2: the peers negotiate the IPsec security associations for the data.
+4. Data is sent encrypted through the tunnel.
+
+IPsec transport mode vs tunnel mode:
+- Transport mode protects only the payload and keeps the original IP header. It is used between two end hosts.
+- Tunnel mode protects the whole original packet and adds a new IP header. It is used by site-to-site VPN gateways.
+
+VPN comparison, IPsec vs SSL VPN:
+- IPsec works at Layer 3, protects all applications, and needs client software for remote users.
+- SSL/TLS VPN works through a web browser, needs no client for clientless access, and is easy for remote users.
+
+VPN and IPsec troubleshooting:
+- GRE tunnel down: check that the tunnel destination is reachable and the source and destination match on both ends.
+- IPsec fails: check that encryption, hash, DH group, and pre-shared key match on both peers.
+- Traffic blocked: make sure UDP 500, UDP 4500, and ESP (protocol 50) are allowed through firewalls.
+
+CCNA exam tips for VPN and IPsec:
+- GRE is IP protocol 47 and is not encrypted.
+- ESP is protocol 50 and encrypts; AH is protocol 51 and does not encrypt.
+- IKE uses UDP 500 and NAT-T uses UDP 4500.
+
+Common questions about VPN and IPsec:
+Q: What is the difference between site-to-site and remote-access VPN?
+A: A site-to-site VPN connects whole networks through VPN gateways, while a remote-access VPN connects a single user to the company network.
+
+Q: Does GRE encrypt traffic?
+A: No, GRE does not encrypt traffic, so it is combined with IPsec when security is needed.
+
+Q: What is the difference between AH and ESP?
+A: AH (protocol 51) gives integrity and authentication without encryption, while ESP (protocol 50) also encrypts the data.
+
+Q: What port does IKE use?
+A: IKE uses UDP port 500, and NAT Traversal uses UDP port 4500.
+
+Q: What are the four parts of the IPsec framework?
+A: Confidentiality, integrity, origin authentication, and Diffie-Hellman key exchange.

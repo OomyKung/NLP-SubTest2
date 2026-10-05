@@ -1,0 +1,85 @@
+Network Management (CDP, LLDP, NTP, SNMP, Syslog, Backups and IOS Images)
+
+Network management covers the tools and tasks that keep Cisco devices documented, monitored, backed up and recoverable. In CCNA this includes device discovery with CDP and LLDP, time synchronization with NTP, monitoring with SNMP and Syslog, configuration backup and restore, IOS image management, and password recovery.
+
+Network management with CDP and LLDP:
+CDP is Cisco proprietary and runs at Layer 2. It sends advertisements every 60 seconds with a holdtime of 180 seconds. LLDP is the open standard IEEE 802.1AB; it sends every 30 seconds with a holdtime of 120 seconds and is disabled by default on Cisco IOS, so you enable it with "lldp run". Use "show cdp neighbors detail" or "show lldp neighbors" to discover directly connected devices.
+
+Network management with NTP:
+NTP synchronizes device clocks so log messages and certificates have correct timestamps. NTP uses UDP port 123. A lower stratum number means closer to an authoritative time source. Configure a client with "Router(config)# ntp server 10.1.1.1" and verify with "show ntp associations" and "show clock".
+
+Network management with SNMP:
+SNMP lets a network management station (the manager) read and change data on devices (the agents). Data is organized in the MIB. The agent listens on UDP port 161, and traps (unsolicited alerts) are sent to the manager on UDP port 162. SNMPv1 and SNMPv2c use plain-text community strings; SNMPv3 adds authentication and encryption.
+
+Network management with Syslog:
+Syslog sends event messages to the console, the buffer, or a Syslog server on UDP port 514. Severity levels are 0 Emergency, 1 Alert, 2 Critical, 3 Error, 4 Warning, 5 Notification, 6 Informational, 7 Debugging. A lower number is more severe. Example: "Router(config)# logging host 10.1.1.50" and "logging trap 4".
+
+Configuration backup in network management:
+The running-config is in RAM and is lost on reload; the startup-config is in NVRAM. Save with "copy running-config startup-config". To keep a copy off the device, back it up to a TFTP server:
+Router# copy running-config tftp:
+Address or name of remote host []? 192.168.1.50
+Destination filename [r1-confg]? R1-backup.txt
+To restore, use "copy tftp: running-config". The file is merged into the running configuration, it does not fully replace it. Save the result with "copy running-config startup-config".
+
+Configuration backup to USB in network management:
+Use "show file systems" to list storage, "dir usbflash0:" to list files on the USB drive, and "copy running-config usbflash0:" to save the configuration. Restore with "copy usbflash0:R1-config running-config".
+
+IOS image naming in network management:
+Example image name: c1900-universalk9-mz.SPA.152-4.M3.bin
+- c1900: the platform (Cisco 1900 router).
+- universalk9: the feature set; k9 means it supports strong encryption.
+- mz: the image runs from RAM and is compressed.
+- SPA: the image is digitally signed by Cisco.
+- 152-4.M3: the version, IOS 15.2(4)M3.
+- .bin: the file extension for a binary executable.
+
+IOS image upgrade steps in network management:
+1. Check the current image and memory with "show version" and "show flash".
+2. Make sure flash has enough free space for the new image.
+3. Ping the TFTP server to confirm connectivity.
+4. Copy the image: "Router# copy tftp: flash:", then enter the server address and file name.
+5. Tell the router which image to load: "Router(config)# boot system flash:c1900-universalk9-mz.SPA.152-4.M3.bin".
+6. Save with "copy running-config startup-config", reload, and verify with "show version".
+
+Password recovery in network management:
+Password recovery needs physical console access.
+1. Connect to the console port and power cycle the router.
+2. Press Ctrl+Break within about 60 seconds of boot to enter ROMMON mode.
+3. rommon 1 > confreg 0x2142 (ignore the startup-config on the next boot).
+4. rommon 2 > reset (the router reloads with a blank configuration).
+5. Answer "no" to the setup dialog, then enter "enable".
+6. Router# copy startup-config running-config (load the old configuration).
+7. Change the passwords, for example "enable secret NewPass123".
+8. Router(config)# config-register 0x2102 (load the startup-config normally again).
+9. Router# copy running-config startup-config.
+Interfaces may be administratively down after step 6, so use "no shutdown" on them.
+
+Configuration register values in network management:
+- 0x2102 is the default value. The router loads the startup-config from NVRAM.
+- 0x2142 makes the router ignore the startup-config, used for password recovery.
+- "show version" displays the current value and the value used at the next reload.
+
+Network management troubleshooting:
+- Forgetting to set the register back to 0x2102 makes the router ignore its configuration after every reload.
+- Not enough flash space stops an IOS upgrade; delete old images only after the new one is verified.
+
+CCNA exam tips for network management:
+- SNMP uses UDP 161 and traps use UDP 162; Syslog uses UDP 514; NTP uses UDP 123.
+- Syslog severity 0 is Emergency and 7 is Debugging.
+- The default configuration register is 0x2102; password recovery uses 0x2142.
+
+Common questions about network management:
+Q: How do you back up a Cisco configuration to a TFTP server?
+A: Use "copy running-config tftp:" and enter the TFTP server address and a file name.
+
+Q: What configuration register value is used for password recovery?
+A: The value 0x2142 makes the router ignore the startup-config, and 0x2102 restores normal booting.
+
+Q: How do you enter ROMMON mode on a Cisco router?
+A: Power cycle the router and press Ctrl+Break on the console during boot.
+
+Q: What does "k9" mean in an IOS image name?
+A: It means the image supports strong cryptography such as SSH and IPsec.
+
+Q: How do you make a router boot a specific IOS image?
+A: Use "boot system flash:" followed by the image name, then save the configuration.

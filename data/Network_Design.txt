@@ -1,0 +1,101 @@
+Network Design (Hierarchical and Scalable Networks)
+
+Network design is the planning of a network so it is reliable, scalable, secure, and easy to manage. Cisco recommends a hierarchical design that divides the network into layers, each with its own job.
+
+Network design three-layer hierarchical model:
+- Access layer: connects end devices such as PCs, IP phones, and access points. It provides VLANs, port security, Power over Ethernet (PoE), and QoS marking.
+- Distribution layer: aggregates the access switches. It routes between VLANs, applies policy with ACLs, provides redundancy (FHRP such as HSRP), and controls the size of broadcast domains.
+- Core layer: the high-speed backbone. It forwards packets as fast as possible, must be redundant, and should avoid packet manipulation such as ACL filtering.
+
+Network design two-tier collapsed core:
+In a smaller network, the core and distribution layers are combined into one layer, called a collapsed core. This saves money and suits a single building.
+
+Network design benefits of the hierarchical model:
+- Scalability: new access switches are added without redesigning the network.
+- Redundancy: links and devices are doubled at the distribution and core layers.
+- Performance: fast links at the core.
+- Manageability: policy is applied at clear points and each layer is easy to troubleshoot.
+
+Network design borderless switched network:
+A Cisco borderless switched network lets users connect from anywhere, at any time, on any device. It follows the principles of hierarchy, modularity, resiliency, and flexibility.
+
+Network design for scalability, step by step:
+1. Use a modular, hierarchical design so parts can be added or upgraded.
+2. Add redundancy with multiple links and devices so there is no single point of failure.
+3. Use EtherChannel to bundle links; STP sees the bundle as one link.
+4. Use an FHRP such as HSRP so hosts keep a working default gateway if one router fails.
+5. Limit the size of failure domains, the area affected when a device or link fails.
+6. Use a scalable routing protocol such as multi-area OSPF so changes stay inside one area.
+7. Plan bandwidth with faster uplinks at the distribution and core layers.
+
+Network design switch selection:
+- Fixed configuration switches: a fixed number of ports.
+- Modular switches: a chassis with line cards that can be added later.
+- Stackable switches: several switches cabled together that work as one switch.
+- Port density: the number of ports on one switch.
+- Forwarding rate: how much traffic the switch can process per second. Wire speed means it can forward at the full rate of all ports.
+- PoE: powers phones, cameras, and access points over the Ethernet cable.
+- Multilayer switches: can route between VLANs at Layer 3.
+- Also consider cost, power usage, and rack units. One rack unit (1U) is 1.75 inches high.
+
+Network design router categories:
+- Branch routers: for branch offices and small sites.
+- Network edge routers: connect the campus to the internet or WAN.
+- Service provider routers: very high throughput for ISP networks.
+
+Network design spine-leaf for data centers:
+In a spine-leaf design, every leaf switch connects to every spine switch. Leaf switches do not connect to each other, and spine switches do not connect to each other. Servers connect to leaf switches. Traffic between any two servers crosses the same number of hops (leaf, spine, leaf), so latency is predictable. Cisco ACI uses this design.
+
+Network design distribution layer configuration example:
+Switch(config)# ip routing
+Switch(config)# interface vlan 10
+Switch(config-if)# ip address 192.168.10.2 255.255.255.0
+Switch(config-if)# standby 1 ip 192.168.10.1
+Switch(config-if)# standby 1 priority 110
+Switch(config-if)# standby 1 preempt
+Switch(config)# interface range g1/0/1 - 2
+Switch(config-if-range)# channel-group 1 mode active
+This multilayer switch routes VLAN 10, is the HSRP active gateway, and bundles two uplinks with LACP.
+
+Network design verification:
+Switch# show etherchannel summary
+1      Po1(SU)      LACP      Gi1/0/1(P) Gi1/0/2(P)
+SU means the port channel is Layer 2 and in use, and P means bundled. "show standby brief" shows the HSRP active router.
+
+Network design for a small network:
+- Plan for growth without a full redesign.
+- Select devices by cost, speed, ports, and expandability.
+- Create an IP addressing plan with separate ranges for servers, printers, and users.
+- Add redundancy for important servers and links.
+- Identify traffic types; voice and video need QoS priority.
+- Back up device configurations and data.
+
+Network design troubleshooting and common mistakes:
+- A flat network with no hierarchy creates large broadcast and failure domains.
+- One uplink with no redundancy is a single point of failure.
+- Oversubscribed uplinks cause congestion.
+
+Network design comparison, three-tier vs two-tier collapsed core:
+- Three-tier: separate access, distribution, and core; for large campuses.
+- Two-tier: distribution and core combined; cheaper for small and medium networks.
+
+CCNA exam tips for network design:
+- Access connects users, distribution applies policy, core forwards fast.
+- A collapsed core combines the core and distribution layers.
+- In spine-leaf, every leaf connects to every spine.
+
+Common questions about network design:
+Q: What are the three layers of the hierarchical network design model?
+A: The access layer, the distribution layer, and the core layer.
+
+Q: What is a collapsed core design?
+A: It is a two-tier design where the core and distribution layers are combined into one layer.
+
+Q: Which layer applies ACLs and routes between VLANs?
+A: The distribution layer applies policy with ACLs and routes between VLANs.
+
+Q: What is the job of the core layer?
+A: The core layer is a high-speed, redundant backbone that forwards traffic quickly without packet manipulation.
+
+Q: What is a spine-leaf topology?
+A: It is a data center design where every leaf switch connects to every spine switch, giving predictable latency.

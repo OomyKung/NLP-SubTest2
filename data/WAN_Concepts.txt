@@ -1,0 +1,92 @@
+WAN Concepts (Wide Area Networks)
+
+A Wide Area Network (WAN) connects LANs that are far apart, such as a head office and its branch offices in different cities. A LAN is owned by the organization and covers a small area, while a WAN crosses a large area using links rented from a service provider. A private WAN is a dedicated connection from a provider, while a public WAN uses the internet, often protected with a VPN.
+
+WAN terms and definitions:
+- CPE (Customer Premises Equipment): devices at the customer site.
+- DTE (Data Terminal Equipment): the customer device that sends data, usually the router.
+- DCE (Data Communications Equipment): connects the DTE to the provider and provides clocking, such as a modem or CSU/DSU.
+- Demarcation point: the point where customer responsibility ends and provider responsibility begins.
+- Local loop (last mile): the cable from the demarcation point to the provider CO.
+- Central office (CO): the provider building that connects customers to the provider network.
+- Toll network: the long-distance links and devices inside the provider network.
+- POP (Point of Presence): a provider location where customers connect to the provider network.
+
+WAN topologies:
+- Point-to-point: one permanent link between two sites.
+- Hub-and-spoke: branch sites (spokes) connect to a central hub. Spoke-to-spoke traffic goes through the hub.
+- Dual-homed: a site connects to two hubs or two provider routers for redundancy.
+- Fully meshed: every site connects to every other site, needing n(n-1)/2 links.
+- Partially meshed: only the important sites are connected to each other.
+
+How data crosses a WAN, step by step:
+1. A host sends a packet to its default gateway, the branch edge router.
+2. The router encapsulates the packet in a WAN Layer 2 frame, such as HDLC, PPP, or Ethernet.
+3. The frame crosses the DCE and the local loop to the provider CO.
+4. The provider moves the data across its toll network to the CO near the remote site.
+5. The remote edge router removes the WAN frame and forwards the packet to its LAN.
+
+Traditional WAN connectivity:
+- Leased lines: a dedicated point-to-point circuit. A T1 runs at 1.544 Mbps (North America) and an E1 runs at 2.048 Mbps (Europe).
+- Circuit-switched: a circuit is set up for each call, as in the PSTN (dialup) and ISDN.
+- Packet-switched: many customers share the provider network. Frame Relay and ATM are packet-switched technologies that are now legacy.
+- Optical: SONET and SDH are fiber transport standards, and DWDM sends many wavelengths of light over one fiber.
+
+Modern WAN connectivity:
+- Metro Ethernet (Ethernet WAN): the provider extends Ethernet across a city, so the customer uses a normal Ethernet interface.
+- MPLS (Multiprotocol Label Switching): provider routers forward packets using short labels instead of IP lookups. MPLS can carry any protocol, such as IPv4, IPv6, and Ethernet, and it supports QoS.
+
+Internet-based WAN connectivity:
+- DSL: always-on service over the telephone line. ADSL is asymmetric, with faster download than upload. A DSL modem at the customer connects to a DSLAM at the provider CO, and speed drops as the distance to the CO grows.
+- Cable: internet over the cable TV network. It uses the DOCSIS standard, a cable modem at the customer, a CMTS at the provider headend, and a hybrid fiber-coaxial (HFC) network.
+- Fiber: FTTH (fiber to the home), FTTB (fiber to the building), and FTTN (fiber to the node or neighborhood).
+- Wireless: municipal Wi-Fi, cellular 4G and 5G, and satellite (high latency) for remote areas.
+- VPN over the internet: a cheap, secure way to connect sites.
+
+WAN serial link configuration example:
+On a serial link the DCE side must provide the clock. The default encapsulation on a Cisco serial interface is HDLC.
+Router(config)# interface serial 0/0/0
+Router(config-if)# ip address 10.0.0.1 255.255.255.252
+Router(config-if)# clock rate 64000
+Router(config-if)# no shutdown
+
+WAN verification:
+Router# show controllers serial 0/0/0
+Interface Serial0/0/0
+Hardware is PowerQUICC MPC860
+DCE V.35, clock rate 64000
+The output shows whether the cable end is DCE or DTE and the clock rate. "show interfaces serial 0/0/0" shows the encapsulation and line protocol status.
+
+WAN ISP connectivity options:
+- Single-homed: one connection to one ISP. It is cheap but has no redundancy.
+- Dual-homed: two connections to the same ISP.
+- Multihomed: connections to two or more different ISPs.
+- Dual-multihomed: two connections to each of two or more ISPs, the most redundant option.
+
+WAN troubleshooting:
+A serial link that stays down often has no clock rate on the DCE side, mismatched encapsulation, or a cable problem. Slow DSL can mean a long distance to the DSLAM.
+
+WAN comparison, private WAN vs internet-based WAN:
+- Private WAN (leased line, Metro Ethernet, MPLS): predictable performance with service level agreements, but higher cost.
+- Internet-based WAN (DSL, cable, fiber, cellular): low cost, but no guaranteed performance, so a VPN adds security.
+
+CCNA exam tips for WAN concepts:
+- A T1 is 1.544 Mbps and an E1 is 2.048 Mbps.
+- The DCE provides clocking; the DTE is usually the customer router.
+- DSL uses a DSLAM, cable uses a CMTS and DOCSIS.
+
+Common questions about WAN concepts:
+Q: What is the demarcation point in a WAN?
+A: It is the point where the customer network ends and the service provider network begins.
+
+Q: What is the speed of a T1 and an E1 line?
+A: A T1 line runs at 1.544 Mbps and an E1 line runs at 2.048 Mbps.
+
+Q: What is the difference between DTE and DCE?
+A: The DTE is the customer device that sends data, usually a router, and the DCE connects it to the provider and provides the clock.
+
+Q: What is a hub-and-spoke WAN topology?
+A: Branch sites connect only to a central hub site, so spoke-to-spoke traffic passes through the hub.
+
+Q: What is the difference between dual-homed and multihomed?
+A: Dual-homed means two connections to the same ISP, while multihomed means connections to two or more different ISPs.

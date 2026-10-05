@@ -1,0 +1,81 @@
+Network Virtualization (Cloud Computing, Virtualization and SDN)
+
+Network virtualization separates services from physical hardware. In CCNA this includes cloud computing models, server virtualization with hypervisors, containers, and Software-Defined Networking (SDN), where a central controller programs the network.
+
+Cloud computing service models in network virtualization:
+- SaaS (Software as a Service): the provider delivers a complete application over the internet, such as web email.
+- PaaS (Platform as a Service): the provider offers an operating system, development tools and databases so customers can build and run their own applications.
+- IaaS (Infrastructure as a Service): the provider offers virtual servers, storage and networking. The customer manages the operating systems and applications.
+
+Cloud deployment models in network virtualization:
+- Public cloud: services are offered to the general public over the internet.
+- Private cloud: services are used by one organization only.
+- Hybrid cloud: a mix of two or more cloud types, for example private and public.
+- Community cloud: shared by organizations with common needs, such as healthcare or government agencies.
+
+Cloud computing vs data center in network virtualization:
+A data center is a physical facility of servers, storage and network devices owned or rented by a company. Cloud computing is a service, usually running in data centers, that offers on-demand resources over a network, so users pay for what they use and scale without buying hardware.
+
+Server virtualization in network virtualization:
+Traditionally each server ran one operating system on dedicated hardware, which wasted CPU and power (server sprawl). Virtualization lets one physical server run many virtual machines (VMs), each with its own operating system. A hypervisor is the software that creates and runs VMs.
+
+Benefits of network virtualization:
+- Less equipment, less space, and lower power and cooling needs.
+- Faster provisioning: a new server is created in minutes.
+- Isolation: a problem in one VM does not affect others.
+- Easier testing, backup and disaster recovery.
+
+Hypervisor types in network virtualization:
+- Type 1 (bare metal): runs directly on the hardware and is used in data centers. Example: VMware ESXi.
+- Type 2 (hosted): runs as an application on a host operating system such as Windows, common for labs. Examples: Oracle VirtualBox and VMware Workstation.
+
+Virtual switches in network virtualization:
+VMs connect to a virtual switch inside the hypervisor. It forwards frames between VMs on the same host and connects them to the physical network through the server NICs.
+
+Containers vs virtual machines in network virtualization:
+- A VM includes a full guest operating system on top of the hypervisor.
+- A container packages only the application and its libraries and shares the host OS kernel.
+- Containers are smaller, start in seconds, and use fewer resources.
+- VMs give stronger isolation and can run different operating systems on one host.
+
+Network device planes in network virtualization:
+- Control plane: the brain of the device. It runs protocols such as OSPF, STP and ARP and builds the routing and forwarding tables.
+- Data plane (forwarding plane): forwards frames and packets using those tables, for example with Cisco Express Forwarding (CEF).
+- Management plane: used to configure and monitor the device with SSH, SNMP and Syslog.
+
+Traditional networking vs SDN in network virtualization:
+- Traditional: every device has its own control plane and is configured one by one through the CLI.
+- SDN: the control plane is centralized in an SDN controller, and devices mainly perform the data plane.
+- SDN changes are pushed from one place, can be automated, and give a network-wide view.
+
+SDN controller and APIs in network virtualization:
+The SDN controller sits between applications and network devices. Northbound APIs connect the controller to applications and scripts, usually with REST APIs. Southbound APIs connect the controller to network devices, for example OpenFlow, NETCONF, or OpFlex. OpenFlow lets a controller program the flow tables of switches.
+
+Cisco SDN solutions in network virtualization:
+- Cisco ACI (Application Centric Infrastructure) is a data center solution. The APIC (Application Policy Infrastructure Controller) manages Nexus 9000 switches in a spine-leaf topology.
+- Cisco DNA Center, now called Catalyst Center, is the controller for enterprise campus and branch networks, with automation, assurance and a GUI.
+
+Network virtualization common mistakes:
+- Thinking a container has its own OS kernel; it shares the host kernel.
+- Confusing northbound (to applications) with southbound (to devices) APIs.
+
+CCNA exam tips for network virtualization:
+- Type 1 hypervisors run on bare metal; Type 2 run on a host OS.
+- SDN separates the control plane from the data plane.
+- Cisco ACI uses the APIC controller and a spine-leaf topology.
+
+Common questions about network virtualization:
+Q: What is the difference between SaaS, PaaS and IaaS?
+A: SaaS delivers ready applications, PaaS delivers a development platform, and IaaS delivers virtual servers, storage and networking.
+
+Q: What is the difference between a Type 1 and a Type 2 hypervisor?
+A: A Type 1 hypervisor runs directly on the hardware, while a Type 2 hypervisor runs on a host operating system.
+
+Q: How is a container different from a virtual machine?
+A: A container shares the host OS kernel, while a VM runs its own full guest operating system.
+
+Q: What are the three planes of a network device?
+A: The control plane builds the tables, the data plane forwards traffic, and the management plane manages the device.
+
+Q: What is a southbound API in SDN?
+A: A southbound API lets the SDN controller program network devices, for example with OpenFlow or NETCONF.

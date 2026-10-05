@@ -1,0 +1,97 @@
+ICMP (Internet Control Message Protocol)
+
+ICMP is a Layer 3 support protocol that sends error and control messages about IP packet delivery. It does not make IP reliable; it only reports problems. ICMPv4 is used with IPv4 and is IP protocol number 1. ICMPv6 is used with IPv6, is IP protocol number 58, and also performs Neighbor Discovery. The ping and traceroute tools both rely on ICMP.
+
+ICMP key terms:
+- Type and code: the type is the message kind (for example Destination Unreachable); the code gives a more specific reason.
+- TTL (Time to Live): an IPv4 header field that each router decreases by 1. In IPv6 it is called Hop Limit.
+- NDP (Neighbor Discovery Protocol): ICMPv6 messages that replace ARP and help hosts find routers.
+
+ICMPv4 message types:
+- Type 0: Echo Reply, the answer to a ping.
+- Type 3: Destination Unreachable.
+- Type 5: Redirect, which tells a host that a better next-hop router exists on the same network.
+- Type 8: Echo Request, sent by ping.
+- Type 11: Time Exceeded, sent when a router decreases the TTL to 0 and drops the packet.
+
+ICMP Destination Unreachable codes:
+Destination Unreachable (type 3) uses codes to explain why a packet could not be delivered:
+- Code 0: Net unreachable. The router has no route to the destination network.
+- Code 1: Host unreachable. The network was reached but the host did not answer.
+- Code 3: Port unreachable. The host is up but no application is listening on the UDP port.
+
+ICMP ping operation:
+1. The source sends an ICMP Echo Request (type 8) to the destination IP address.
+2. If the destination receives it, it answers with an ICMP Echo Reply (type 0).
+3. The source measures the round-trip time and reports success or failure.
+A successful ping proves Layer 3 connectivity in both directions. Pinging the loopback 127.0.0.1 (IPv4) or ::1 (IPv6) tests the host's own TCP/IP stack. Test the loopback, then the default gateway, then a remote host.
+
+ICMP Cisco ping output symbols:
+- ! (exclamation mark): an Echo Reply was received, success.
+- . (period): timed out while waiting for a reply.
+- U: a Destination Unreachable message was received.
+- Q: source quench (destination too busy).
+- M: could not fragment.
+- ?: unknown packet type.
+- &: packet lifetime (TTL) exceeded.
+The first ping often shows ".!!!!" because the first packet times out while ARP runs.
+
+ICMP ping example on a Cisco router:
+Router# ping 192.168.2.10
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 192.168.2.10, timeout is 2 seconds:
+.!!!!
+Success rate is 80 percent (4/5), round-trip min/avg/max = 1/2/4 ms
+By default Cisco IOS sends 5 echo requests of 100 bytes with a 2 second timeout. An extended ping is started by typing "ping" with no address in privileged EXEC mode. It lets you set the repeat count, size, timeout, and source interface or address.
+
+ICMP traceroute operation:
+Traceroute finds the path a packet takes, hop by hop, using the TTL field:
+1. The source sends packets with TTL 1. The first router decreases TTL to 0, drops the packet, and returns ICMP Time Exceeded (type 11).
+2. The source sends packets with TTL 2, and the second router returns Time Exceeded.
+3. TTL keeps increasing by 1 until the destination replies or the maximum hop count is reached.
+Cisco IOS traceroute sends UDP packets to high port numbers, and the destination answers with ICMP Port Unreachable. Windows tracert sends ICMP Echo Requests, and the destination answers with an Echo Reply. An asterisk (*) means no reply was received for that probe.
+
+ICMPv6 Neighbor Discovery messages:
+- Type 133: Router Solicitation (RS). A host asks routers to send a Router Advertisement.
+- Type 134: Router Advertisement (RA). A router announces its prefix, prefix length, and default gateway, and tells hosts to use SLAAC or DHCPv6.
+- Type 135: Neighbor Solicitation (NS). Like an ARP request, it finds a neighbor's MAC address.
+- Type 136: Neighbor Advertisement (NA). Like an ARP reply.
+- Type 137: Redirect.
+
+ICMPv6 Duplicate Address Detection (DAD):
+Before using a new IPv6 address, a host performs DAD by sending a Neighbor Solicitation for its own address. If a Neighbor Advertisement comes back, the address is already in use. If no reply arrives, the address is unique.
+
+ICMPv4 vs ICMPv6 comparison:
+- ICMPv4 is IP protocol 1; ICMPv6 is IP protocol 58.
+- Both provide echo (ping), destination unreachable, time exceeded, and redirect.
+- ICMPv6 adds Neighbor Discovery, which replaces ARP and supports SLAAC. Blocking all ICMPv6 breaks IPv6.
+
+ICMP troubleshooting:
+- Traceroute stops at one hop: check the routing table of the last router that answered.
+- U in ping output: a router has no route or an ACL is blocking the traffic.
+- Dots only: the packet or reply is lost; check the return route.
+- A firewall or ACL may block ICMP, so a failed ping does not always mean the host is down.
+
+CCNA exam tips for ICMP:
+- Echo Request is type 8, Echo Reply is type 0, Time Exceeded is type 11.
+- RS 133, RA 134, NS 135, NA 136, Redirect 137.
+- In Cisco ping output, ! means success, . means timeout, and U means unreachable.
+
+Common questions about ICMP:
+Q: What ICMP types does ping use?
+A: Ping sends an Echo Request, which is type 8, and receives an Echo Reply, which is type 0.
+
+Q: What does the U symbol mean in Cisco ping output?
+A: U means a Destination Unreachable message was received from a router.
+
+Q: How does traceroute work?
+A: Traceroute sends packets with TTL 1, 2, 3 and so on, and each router that drops a packet returns an ICMP Time Exceeded message.
+
+Q: What is the difference between Cisco traceroute and Windows tracert?
+A: Cisco traceroute sends UDP packets, while Windows tracert sends ICMP Echo Requests.
+
+Q: Which ICMPv6 messages does Neighbor Discovery use?
+A: It uses Router Solicitation 133, Router Advertisement 134, Neighbor Solicitation 135, Neighbor Advertisement 136, and Redirect 137.
+
+Q: What IP protocol number is ICMP?
+A: ICMPv4 is IP protocol number 1 and ICMPv6 is IP protocol number 58.

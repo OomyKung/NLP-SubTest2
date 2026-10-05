@@ -1,0 +1,84 @@
+Physical Layer (OSI Layer 1)
+
+The physical layer is Layer 1 of the OSI model. It moves the bits of a frame across the media as electrical signals on copper, light pulses on fiber, or radio waves. It defines cables, connectors, signal encoding, and physical components. The data link layer sublayers are covered in the Ethernet document.
+
+Physical layer standards organizations:
+Physical layer standards come from engineering and communications organizations: ISO (International Organization for Standardization), IEEE (for example 802.3 Ethernet and 802.11 Wi-Fi), TIA/EIA (cabling and the T568A and T568B wiring standards), ITU (International Telecommunication Union), and ANSI.
+
+Physical layer bandwidth, throughput, goodput, and latency:
+- Bandwidth: the capacity of a medium to carry data, in bits per second (bps).
+- Throughput: the actual measured transfer of bits over time, usually lower than bandwidth.
+- Goodput: the usable data transferred, which is throughput minus protocol overhead (headers, acknowledgments, retransmissions).
+- Latency: the time, including delays, for data to travel from one point to another.
+
+Physical layer copper cabling types:
+- UTP (Unshielded Twisted Pair): the most common LAN cable, with four twisted pairs, RJ-45 connectors, and a 100 meter limit.
+- STP (Shielded Twisted Pair): adds foil or braided shielding against noise, but costs more.
+- Coaxial: a center conductor with a shield, used for cable internet and antennas.
+
+Physical layer copper cabling problems:
+- Attenuation: the signal gets weaker the farther it travels. This is why UTP has a 100 meter limit.
+- EMI (electromagnetic interference) and RFI (radio frequency interference): outside signals from motors, lights, and radios that distort the data signal.
+- Crosstalk: interference caused by the magnetic field of a neighboring wire pair.
+UTP limits crosstalk through cancellation: the two wires of a circuit are twisted together so their magnetic fields cancel each other.
+
+Physical layer RJ-45 and T568A / T568B wiring:
+UTP cables end in RJ-45 connectors with 8 pins. The TIA/EIA standards T568A and T568B define the wire color order. The difference is that the orange and green pairs swap places. T568B order is white-orange, orange, white-green, blue, white-blue, green, white-brown, brown. T568A order is white-green, green, white-orange, blue, white-blue, orange, white-brown, brown.
+
+Physical layer Ethernet cable types:
+- Straight-through: the same standard on both ends. Connects unlike devices, such as PC to switch or switch to router.
+- Crossover: T568A on one end and T568B on the other. Connects like devices, such as switch to switch, PC to PC, router to router, and PC to router.
+- Rollover (console cable): a Cisco cable that reverses the pin order. Connects a PC to the console port of a router or switch.
+Auto-MDIX, enabled by default on most Cisco switches, detects the cable type automatically, so a crossover cable is optional.
+
+Physical layer fiber-optic cabling:
+Fiber-optic cable sends data as pulses of light through glass, so it is immune to EMI and RFI, supports higher bandwidth, and reaches much longer distances than copper.
+- Single-mode fiber (SMF): a small core of about 9 microns, a laser light source, and one light path. It supports long distances of many kilometers.
+- Multimode fiber (MMF): a larger core of 50 or 62.5 microns, an LED or VCSEL light source, and many light paths. It is used for short distances of a few hundred meters.
+
+Physical layer fiber connectors:
+- ST (straight tip): an older twist-lock connector.
+- SC (subscriber connector): a square push-pull connector.
+- LC (Lucent connector): a small connector, popular on SFP modules.
+A fiber link normally uses two strands, one to transmit and one to receive.
+
+Physical layer wireless media:
+Wireless media carry bits as radio waves. Wireless has limited coverage, suffers interference, is a shared medium, and needs strong security.
+- Wi-Fi: IEEE 802.11 wireless LAN, which uses CSMA/CA.
+- Bluetooth: IEEE 802.15 wireless personal area network.
+- WiMAX: IEEE 802.16 wireless broadband over long distances.
+- Zigbee: IEEE 802.15.4 low-power, low-data-rate devices, common in IoT.
+
+Physical layer copper vs fiber comparison:
+- Distance: UTP up to 100 meters; fiber hundreds of meters (multimode) to many kilometers (single-mode).
+- Interference: copper is sensitive to EMI and RFI; fiber is immune.
+- Cost and use: copper is cheaper and used for end devices; fiber is used for backbones and long links.
+
+Physical layer troubleshooting:
+- Interface down/down: check the cable, connectors, and power on the other device.
+- Many CRC errors: suspect a bad cable, EMI, or a run over 100 meters.
+- No console access: use a rollover cable and 9600 baud terminal settings.
+
+CCNA exam tips for the physical layer:
+- UTP maximum length is 100 meters; fiber is immune to EMI.
+- Straight-through for unlike devices, crossover for like devices, rollover for the console port.
+- Single-mode uses a laser and long distances; multimode uses LEDs and short distances.
+
+Common questions about the physical layer:
+Q: What cable connects a PC to a switch?
+A: A straight-through cable connects a PC to a switch because they are unlike devices.
+
+Q: What cable connects two switches without auto-MDIX?
+A: A crossover cable connects two switches, but auto-MDIX makes it optional on modern switches.
+
+Q: What is the maximum length of a UTP cable?
+A: The maximum length of a UTP Ethernet cable is 100 meters.
+
+Q: What is the difference between single-mode and multimode fiber?
+A: Single-mode uses a 9 micron core and a laser for long distances; multimode uses a 50 or 62.5 micron core and LEDs for short distances.
+
+Q: How does UTP reduce crosstalk?
+A: UTP reduces crosstalk by cancellation, which comes from twisting the wire pairs together.
+
+Q: What is the difference between bandwidth and throughput?
+A: Bandwidth is the capacity of the medium, while throughput is the actual measured data transfer over time.

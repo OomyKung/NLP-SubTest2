@@ -8,6 +8,13 @@ Each VLAN is connected to a separate physical router interface. The switch port 
 2. Router-on-a-Stick Inter-VLAN Routing:
 A single physical router interface is connected to a switch trunk port. The router interface is divided into logical subinterfaces, one per VLAN. Each subinterface uses 802.1Q encapsulation and has an IP address that acts as the default gateway for that VLAN.
 
+How to configure router-on-a-stick inter-VLAN routing, step by step:
+1. On the switch, configure the port that connects to the router as an 802.1Q trunk.
+2. On the router, create one subinterface for each VLAN, for example g0/0.10 for VLAN 10.
+3. On each subinterface, set 802.1Q encapsulation with the VLAN ID and assign the IP address that hosts in that VLAN use as their default gateway.
+4. Enable the physical router interface with "no shutdown"; the subinterfaces come up with it.
+5. Verify with "show ip interface brief", "show ip route" and "show interfaces trunk".
+
 Router-on-a-stick configuration example (one subinterface per VLAN):
 Router(config)# interface g0/0.10
 Router(config-subif)# encapsulation dot1q 10
@@ -83,3 +90,5 @@ Q: Which inter-VLAN routing method is the fastest?
 A: A Layer 3 switch with SVIs is the fastest because it routes in hardware.
 Q: Which command enables routing on a Layer 3 switch?
 A: The "ip routing" global configuration command enables routing between SVIs.
+Q: How do you configure router-on-a-stick?
+A: On the router, create one subinterface per VLAN, such as interface g0/0.10, then use "encapsulation dot1q 10" and give it an IP address that is the default gateway for that VLAN. Enable the physical interface with "no shutdown", and make the switch port facing the router a trunk.

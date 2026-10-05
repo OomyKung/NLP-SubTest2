@@ -1,0 +1,89 @@
+Application Layer (Protocols and Services)
+
+The application layer is the layer closest to the user. It provides the interface between applications such as web browsers and email clients and the network. In the OSI model it is Layer 7. In the TCP/IP model, one application layer covers the OSI application, presentation, and session layers. Application layer protocols define how programs on different hosts exchange data.
+
+Application layer, presentation and session functions:
+- Presentation layer (OSI Layer 6): formats data (for example JPEG, MP3, MPEG), compresses it, and encrypts it.
+- Session layer (OSI Layer 5): creates, maintains, and ends dialogs between source and destination applications.
+- In the TCP/IP model these functions are part of the application itself.
+
+Application layer client-server model:
+In the client-server model, the client requests data and the server responds. Examples are a web browser and a web server, or an email client and a mail server. Data sent from the client to the server is an upload, and data from the server to the client is a download. Servers are centrally managed, which makes security and backups easier.
+
+Application layer peer-to-peer (P2P) model:
+In a P2P network, two or more hosts connect directly and share resources without a dedicated server. Each peer can act as both client and server. P2P applications such as BitTorrent let a host download parts of a file from many peers at once. P2P is cheap and simple for small networks but hard to secure and manage, and it does not scale well.
+- Client-server: central server, easier security and backup, scales well.
+- P2P: no dedicated server, every peer is client and server, decentralized.
+
+Application layer web protocols HTTP and HTTPS:
+HTTP uses TCP port 80. HTTPS uses TCP port 443 and encrypts the traffic with TLS. HTTP is a request/response protocol and is stateless.
+Common HTTP methods:
+- GET: requests data from the server, such as a web page.
+- POST: sends data to the server, such as a filled-in form.
+- PUT: uploads or replaces a resource on the server.
+
+Application layer URL parts:
+For the URL http://www.cisco.com/index.html:
+- Protocol or scheme: http
+- Server name: www.cisco.com (resolved to an IP address by DNS)
+- Resource or file: index.html
+
+Application layer how a web page loads:
+1. The user types a URL in the browser.
+2. The host asks DNS (port 53) for the IP address of the server name.
+3. The browser opens a TCP connection to the server on port 80 or 443.
+4. The browser sends an HTTP GET request.
+5. The server replies with the HTML page, and the browser displays it.
+
+Application layer email protocols SMTP, POP3, and IMAP:
+- SMTP (Simple Mail Transfer Protocol) uses TCP port 25. It sends email from a client to a server and between mail servers.
+- POP3 (Post Office Protocol version 3) uses TCP port 110. It downloads email to the client and usually deletes it from the server.
+- IMAP (Internet Message Access Protocol) uses TCP port 143. It keeps the email on the server and synchronizes copies, so mail can be read from several devices.
+SMTP is used to send mail, while POP3 and IMAP are used by a client to retrieve mail.
+
+Application layer POP3 vs IMAP:
+- POP3: mail is downloaded and normally removed from the server; best for one device.
+- IMAP: mail stays on the server; folders stay in sync across devices; needs more server storage.
+
+Application layer file sharing protocols FTP and SMB:
+FTP (File Transfer Protocol) uses two TCP connections: TCP port 21 for control commands and TCP port 20 for data transfer. The client opens the control connection, and a separate data connection carries the file. SMB (Server Message Block) uses TCP port 445 and is used by Windows to share files, folders, and printers on a LAN. Unlike FTP, SMB connections stay open for multiple file operations.
+
+Application layer remote access protocols:
+- Telnet uses TCP port 23 and sends everything, including passwords, in plain text.
+- SSH (Secure Shell) uses TCP port 22 and encrypts the whole session. Always use SSH instead of Telnet.
+
+Application layer addressing services DNS and DHCP:
+DNS uses UDP and TCP port 53 and resolves names such as www.cisco.com to IP addresses. DHCP uses UDP port 67 (server) and UDP port 68 (client) to assign IP settings automatically. Both have their own documents.
+
+Application layer well-known port summary:
+FTP 20/21, SSH 22, Telnet 23, SMTP 25, DNS 53, DHCP 67/68, HTTP 80, POP3 110, IMAP 143, HTTPS 443, SMB 445. Well-known ports are 0 to 1023.
+
+Application layer troubleshooting:
+- A website works by IP address but not by name: DNS problem.
+- Email can be received but not sent: check SMTP (TCP 25) access.
+- Remote login works with Telnet but fails with SSH: SSH is not configured on the device.
+- An ACL blocking a port, such as TCP 443, stops that service only.
+
+CCNA exam tips for the application layer:
+- Memorize the port numbers and whether each protocol uses TCP or UDP.
+- SMTP sends mail; POP3 and IMAP retrieve it.
+- FTP uses port 21 for control and port 20 for data.
+
+Common questions about the application layer:
+Q: What port does HTTPS use?
+A: HTTPS uses TCP port 443, while HTTP uses TCP port 80.
+
+Q: What is the difference between POP3 and IMAP?
+A: POP3 (TCP 110) downloads mail and usually deletes it from the server, while IMAP (TCP 143) keeps mail on the server and syncs it across devices.
+
+Q: Which protocol is used to send email?
+A: SMTP, which uses TCP port 25, sends email from clients to servers and between servers.
+
+Q: What ports does FTP use?
+A: FTP uses TCP port 21 for control and TCP port 20 for data transfer.
+
+Q: What is the difference between client-server and peer-to-peer?
+A: Client-server uses a dedicated server that answers client requests, while in peer-to-peer every host can be both client and server.
+
+Q: What does the HTTP GET method do?
+A: GET requests data, such as a web page, from a web server.

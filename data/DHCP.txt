@@ -47,6 +47,18 @@ Switch(config)# ip dhcp snooping vlan 10
 Switch(config)# interface g0/24
 Switch(config-if)# ip dhcp snooping trust
 
+DHCP attacks stopped by DHCP snooping:
+- DHCP starvation: an attacker floods Discover messages with fake MAC addresses until the pool is exhausted, so real clients get no address. Rate limiting stops it.
+- DHCP spoofing: a rogue DHCP server gives clients a false default gateway or DNS server, creating a man-in-the-middle attack. Trusted ports stop it.
+
+DHCP snooping rate limit and verification:
+Switch(config)# interface range f0/1 - 23
+Switch(config-if-range)# ip dhcp snooping limit rate 6
+This allows at most 6 DHCP packets per second on each untrusted access port. If the limit is exceeded, the port is err-disabled. Verify with "show ip dhcp snooping" (enabled VLANs, trusted ports, rate limits) and "show ip dhcp snooping binding".
+Switch# show ip dhcp snooping binding
+MacAddress         IpAddress      Lease(sec)  Type           VLAN  Interface
+00:50:79:66:68:00  192.168.10.11  86400       dhcp-snooping  10    FastEthernet0/1
+
 DHCP verification and troubleshooting:
 - show ip dhcp binding: shows assigned addresses.
 - show ip dhcp pool
@@ -64,6 +76,7 @@ DHCP troubleshooting tips:
 - If the helper-address is on the wrong interface, remote clients get nothing.
 - Forgotten exclusions can cause conflicts with static addresses.
 - With snooping on, an untrusted uplink drops the server replies.
+- If a Cisco router DHCP server ignores clients after snooping is enabled, the switch may be adding Option 82; disable it with "no ip dhcp snooping information option".
 
 CCNA exam tips for DHCP:
 - DORA is Discover, Offer, Request, Acknowledgment.
@@ -83,6 +96,9 @@ A: Routers do not forward broadcasts, so a relay agent forwards client broadcast
 
 Q: What does DHCP snooping do?
 A: It drops DHCP server messages on untrusted ports to block rogue DHCP servers.
+
+Q: What is a DHCP starvation attack?
+A: An attacker uses fake MAC addresses to lease every address in the pool, and "ip dhcp snooping limit rate" helps stop it.
 
 Q: How do you see which addresses a Cisco DHCP server has leased?
 A: Use the "show ip dhcp binding" command.

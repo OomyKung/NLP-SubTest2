@@ -2,6 +2,24 @@ Ethernet (IEEE 802.3)
 
 Ethernet is the most common LAN technology and operates at Layer 1 and Layer 2 of the OSI model. Ethernet defines cabling, signaling speeds, and the frame format that switches use to deliver data between devices using MAC addresses.
 
+Ethernet and the data link layer sublayers:
+The data link layer (Layer 2) has two sublayers:
+- LLC (Logical Link Control), IEEE 802.2: communicates with the network layer and identifies the Layer 3 protocol. Software in the NIC driver.
+- MAC (Media Access Control), IEEE 802.3 for Ethernet: frame encapsulation, MAC addressing, FCS error detection, and media access. NIC hardware.
+
+Ethernet and data link layer topologies:
+Physical topology is how cables connect devices; logical topology is how frames move between nodes.
+- WAN topologies: point-to-point (two nodes on one link), hub-and-spoke (a central site to branches), and full or partial mesh.
+- Star and extended star: devices connect to a central switch, the normal Ethernet LAN topology.
+- Bus and ring: legacy (coaxial Ethernet; Token Ring).
+
+Ethernet and data link layer media access control:
+- Contention-based access: nodes send when needed. Legacy hub Ethernet used CSMA/CD; wireless LANs use CSMA/CA (collision avoidance).
+- Controlled access: each node takes a turn, so there are no collisions. Legacy Token Ring used it.
+
+Ethernet Layer 2 addresses change at every hop:
+MAC addresses are only used on the local link. A router removes the old frame and builds a new one, so the source and destination MAC addresses change at every hop, while the source and destination IP addresses stay the same end to end (unless NAT is used).
+
 Ethernet II frame format:
 - Preamble (7 bytes): alternating 1s and 0s used for clock synchronization.
 - SFD, Start Frame Delimiter (1 byte): marks the start of the frame.
@@ -87,3 +105,6 @@ A: 1000BASE-T Gigabit Ethernet over copper is IEEE 802.3ab.
 
 Q: What causes CRC errors on an interface?
 A: CRC errors are usually caused by bad cables, interference, or a duplex mismatch.
+
+Q: What are the two data link layer sublayers?
+A: They are LLC (IEEE 802.2), which talks to Layer 3, and MAC (IEEE 802.3), which handles addressing and media access.

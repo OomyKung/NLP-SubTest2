@@ -56,6 +56,27 @@ ARP security:
 ARP has no authentication, so an attacker can send fake ARP replies (ARP spoofing or ARP poisoning) to become a man-in-the-middle. Cisco switches defend against this with Dynamic ARP Inspection (DAI), which checks ARP messages against the DHCP snooping binding table.
 Switch(config)# ip arp inspection vlan 10
 
+ARP spoofing (ARP poisoning) attack steps:
+1. The attacker sends gratuitous ARP replies saying "the gateway IP is at my MAC".
+2. Victims overwrite their ARP caches with the attacker's MAC.
+3. Traffic for the gateway goes to the attacker, who reads or changes it and forwards it (man-in-the-middle).
+
+Dynamic ARP Inspection (DAI) configuration for ARP:
+DAI depends on DHCP snooping, because it checks each ARP packet against the DHCP snooping binding table. Enable DHCP snooping on the same VLAN first.
+Switch(config)# ip dhcp snooping
+Switch(config)# ip dhcp snooping vlan 10
+Switch(config)# ip arp inspection vlan 10
+Switch(config)# interface g0/24
+Switch(config-if)# ip dhcp snooping trust
+Switch(config-if)# ip arp inspection trust
+Switch(config-if)# exit
+Switch(config)# ip arp inspection validate src-mac dst-mac ip
+
+DAI trust and validate options for ARP:
+All ports are untrusted for DAI by default; ARP packets on trusted ports (uplinks) are not checked. Untrusted ports have a default limit of 15 ARP packets per second, and exceeding it err-disables the port. The validate option src-mac compares the Ethernet source MAC with the ARP sender MAC, dst-mac compares the destination MAC with the target MAC, and ip drops invalid addresses such as 0.0.0.0. Enter all options on one line, because a new validate command replaces the old one.
+
+Verify with "show ip arp inspection" or "show ip arp inspection vlan 10", which shows the validation settings and whether DAI is Active on the VLAN.
+
 ARP vs IPv6 Neighbor Discovery (NDP):
 - ARP is for IPv4 and uses broadcast requests. IPv6 has no broadcast, so it uses NDP, which runs over ICMPv6.
 - NDP sends a Neighbor Solicitation (NS, ICMPv6 type 135) to a solicited-node multicast address and gets a Neighbor Advertisement (NA, type 136).
@@ -82,3 +103,6 @@ A: IPv6 uses Neighbor Discovery Protocol with Neighbor Solicitation and Neighbor
 
 Q: Why does the first ping sometimes fail?
 A: The first echo request is often dropped while the sender is still waiting for the ARP reply.
+
+Q: What does Dynamic ARP Inspection need to work?
+A: DAI needs DHCP snooping on the same VLAN, because it checks ARP packets against the DHCP snooping binding table.

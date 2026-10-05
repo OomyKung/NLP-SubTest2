@@ -11,7 +11,7 @@
 10,Difference between Standard and Extended ACL?,ACL.txt,yes,"Standard (1-99) filters source IP only, placed near destination; Extended (100-199) filters source, destination, protocol and ports, placed near source."
 11,What does up/down mean in show ip interface brief?,Network_Troubleshooting.txt,yes,Usually a Layer 2 problem such as an encapsulation mismatch.
 12,VLAN คืออะไร,VLAN.txt,yes,(Thai question) Answer in Thai: VLAN is a logical broadcast domain grouping devices across switches.
-13,What is the difference between single-mode and multimode fiber?,Network_Fundamentals.txt,yes,"Multimode: larger core, LED/VCSEL, cheaper, shorter distances; single-mode: small core, laser, more expensive, reaches many kilometers."
+13,What is the difference between single-mode and multimode fiber?,Physical_Layer.txt,yes,"Multimode: larger core, LED/VCSEL, cheaper, shorter distances; single-mode: small core, laser, more expensive, reaches many kilometers."
 14,What is the PDU name at each layer of the OSI model?,OSI_Model.txt,yes,"Layers 5-7 data, Layer 4 segment (or datagram), Layer 3 packet, Layer 2 frame, Layer 1 bits."
 15,Explain the TCP three-way handshake.,TCP_IP.txt,yes,"Client sends SYN, server replies SYN-ACK, client sends ACK and the connection is established."
 16,What is the difference between TCP and UDP?,TCP_IP.txt,yes,"TCP is connection-oriented and reliable (ACKs, retransmission, windowing, 20-byte header); UDP is connectionless best-effort with an 8-byte header."
@@ -49,8 +49,23 @@
 48,What are the default STP timers?,STP.txt,yes,"Hello 2 seconds, forward delay 15 seconds, max age 20 seconds."
 49,What settings must match to form an EtherChannel?,EtherChannel.txt,yes,"Member ports must match speed, duplex, VLAN/access settings and trunk mode/allowed VLANs."
 50,What does the wildcard mask 0.0.0.0 mean in an ACL?,ACL.txt,yes,It matches one exact host address; 'permit 10.1.1.5 0.0.0.0' is the same as 'permit host 10.1.1.5'.
-51,How do you configure BGP route reflectors?,none,no,No information was found in the available documents.
-52,Who is the current CEO of Cisco Systems?,none,no,No information was found in the available documents.
-53,ราคาสวิตช์ Cisco Catalyst 9300 เท่าไหร่,none,no,ไม่พบข้อมูลในเอกสารที่มี
-54,How do you configure IS-IS on a Cisco router?,none,no,No information was found in the available documents.
-55,How do I create a Kubernetes network policy?,none,no,No information was found in the available documents.
+51,How do you convert the decimal number 168 to binary?,Number_Systems.txt,yes,"Subtract place values 128+32+8 = 168, so 168 = 10101000."
+52,What is crosstalk and how does UTP cabling reduce it?,Physical_Layer.txt,yes,Crosstalk is interference from signals on adjacent wires; twisting the wire pairs cancels it out.
+53,What do the ping output symbols ! . and U mean on a Cisco router?,ICMP.txt,yes,"! = success (echo reply), . = timeout, U = destination unreachable."
+54,What are the LLC and MAC sublayers of the data link layer?,Ethernet.txt,yes,"LLC (IEEE 802.2) talks to upper-layer protocols; MAC (IEEE 802.3) handles framing, addressing and media access."
+55,How do you configure a switch management IP address and default gateway?,Basic_Device_Configuration.txt,yes,"interface vlan 1, ip address <ip> <mask>, no shutdown, then ip default-gateway <router ip> in global configuration."
+56,What is the difference between POP3 and IMAP?,Application_Layer.txt,yes,POP3 (TCP 110) downloads and deletes mail from the server; IMAP (TCP 143) keeps mail on the server and synchronises it.
+57,"What do the A, O and M flags in an IPv6 Router Advertisement mean?",SLAAC_DHCPv6.txt,yes,"A = use SLAAC, O = get other information (e.g. DNS) from stateless DHCPv6, M = use stateful DHCPv6 for the address."
+58,SLAAC ต่างจาก Stateful DHCPv6 อย่างไร,SLAAC_DHCPv6.txt,yes,(Thai question) Answer in Thai: SLAAC lets the host build its own address from the RA prefix; stateful DHCPv6 (M flag) has a server assign and track addresses.
+59,What is the difference between a hub-and-spoke and a full mesh WAN topology?,WAN_Concepts.txt,yes,"Hub-and-spoke connects branches through one central hub (single point of failure); full mesh connects every site to every other site (most redundant, most expensive)."
+60,What is the difference between AH and ESP in IPsec?,VPN_IPsec.txt,yes,AH (IP protocol 51) provides integrity and authentication without encryption; ESP (IP protocol 50) adds encryption (confidentiality).
+61,What are the three layers of the hierarchical network design model?,Network_Design.txt,yes,"Access (end devices), distribution (policy, inter-VLAN routing, aggregation) and core (high-speed backbone)."
+62,How do you recover a lost password on a Cisco router?,Network_Management.txt,yes,"Break into ROMMON, set confreg 0x2142, reload, copy startup-config to running-config, change passwords, set config-register 0x2102, save."
+63,What is the difference between a Type 1 and a Type 2 hypervisor?,Network_Virtualization.txt,yes,"Type 1 (bare metal) runs directly on hardware, e.g. VMware ESXi; Type 2 (hosted) runs on top of a host OS, e.g. VirtualBox."
+64,How do you configure DHCP snooping on a Cisco switch?,DHCP.txt,yes,"ip dhcp snooping, ip dhcp snooping vlan <id>, ip dhcp snooping trust on the uplink to the real server, optional limit rate on untrusted ports."
+65,How does Dynamic ARP Inspection prevent ARP spoofing?,ARP.txt,yes,DAI checks ARP packets on untrusted ports against the DHCP snooping binding table and drops invalid ones; enabled with ip arp inspection vlan <id>.
+66,How do you configure BGP route reflectors?,none,no,No information was found in the available documents.
+67,Who is the current CEO of Cisco Systems?,none,no,No information was found in the available documents.
+68,ราคาสวิตช์ Cisco Catalyst 9300 เท่าไหร่,none,no,ไม่พบข้อมูลในเอกสารที่มี
+69,How do you configure IS-IS on a Cisco router?,none,no,No information was found in the available documents.
+70,How do I create a Kubernetes network policy?,none,no,No information was found in the available documents.
