@@ -16,11 +16,12 @@ Run locally:
     streamlit run app.py
 """
 
+import csv
 import html
 import os
 import re
 import time
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import faiss
@@ -73,6 +74,13 @@ MAX_HISTORY_MESSAGES = 4
 
 # Exact reply required by the system prompt when the answer is not in the docs
 NOT_FOUND_MESSAGE = "ไม่พบข้อมูลในเอกสารที่มี"
+# The LLM always returns the Thai message above (it is in the system prompt).
+# The app then shows it in the language of the question; see localize_not_found().
+NOT_FOUND_MESSAGE_EN = "No information was found in the available documents."
+
+# Chat timestamps are shown in Thailand time. Thailand has no daylight saving,
+# so a fixed UTC+7 offset is always correct.
+DISPLAY_TIMEZONE = timezone(timedelta(hours=7), name="UTC+7")
 
 USER_AVATAR = "👤"
 ASSISTANT_AVATAR = "🌐"
@@ -83,6 +91,21 @@ SUGGESTED_QUESTIONS = [
     "How does DHCP Relay work?",
     "Difference between Standard and Extended ACL?",
 ]
+
+# Questions whose answers are NOT in the documents. The LLM knows these from its
+# training, so replying "ไม่พบข้อมูลในเอกสารที่มี" proves it only uses the retrieved context.
+OUT_OF_SCOPE_QUESTIONS = [
+    "How do you configure BGP route reflectors?",
+    "Who is the current CEO of Cisco Systems?",
+    "ราคาสวิตช์ Cisco Catalyst 9300 เท่าไหร่",
+    "How do I create a Kubernetes network policy?",
+]
+
+# Evaluation questions (used by the Evaluation view)
+TEST_QUESTIONS_FILE = Path(__file__).parent / "test_questions.csv"
+
+VIEW_CHAT = "💬 Chat"
+VIEW_EVAL = "📊 Evaluation"
 
 USE_CASES = [
     ("🎓", "Exam preparation", "Review CCNA concepts such as VLANs, STP and OSPF areas."),
@@ -199,7 +222,7 @@ section[data-testid="stSidebar"] {
 .ng-stat-value.small { font-size: .8rem; font-family: var(--ng-mono); font-weight: 500; word-break: break-all; }
 .ng-stat-label { font-size: .7rem; color: var(--ng-muted); margin-top: .15rem; }
 .ng-doc-list {
-    max-height: 340px; overflow-y: auto; padding-right: .25rem;
+    max-height: 300px; overflow-y: auto; padding-right: .25rem;
     scrollbar-width: thin; scrollbar-color: rgba(148, 163, 184, .3) transparent;
 }
 .ng-doc {
@@ -409,6 +432,45 @@ details.ng-source > summary::-webkit-details-marker { display: none; }
     border-radius: 50%; font-size: .7rem; font-weight: 700; background: rgba(251,191,36,.2); color: #FDE68A;
 }
 
+/* ---------- RAG guardrail (out-of-scope) buttons ---------- */
+.ng-guardrail-note {
+    color: var(--ng-muted); font-size: .84rem; line-height: 1.6; margin: .15rem 0 .7rem;
+    padding: .7rem .9rem; border-radius: 12px;
+    background: rgba(251, 191, 36, .06); border: 1px dashed rgba(251, 191, 36, .35);
+}
+.ng-guardrail-note b { color: #FDE68A; }
+.st-key-ng-guardrail-main .stButton > button,
+.st-key-ng-guardrail-side .stButton > button {
+    border-color: rgba(251, 191, 36, .3); background: rgba(251, 191, 36, .05);
+}
+.st-key-ng-guardrail-main .stButton > button:hover,
+.st-key-ng-guardrail-side .stButton > button:hover {
+    border-color: var(--ng-warn); box-shadow: 0 8px 22px -12px rgba(251, 191, 36, .7);
+}
+.st-key-ng-guardrail-side .stButton > button { padding: .5rem .7rem; font-size: .8rem; }
+.st-key-ng-guardrail-side { gap: .4rem; }
+
+/* ---------- View switch + evaluation page ---------- */
+.st-key-ng-topbar [data-testid="stButtonGroup"] { justify-content: center; }
+.st-key-ng-topbar .stButton > button { width: auto; padding: .45rem .95rem; border-radius: 999px; font-size: .85rem; }
+.st-key-home_side .stButton > button, .st-key-home_side button {
+    justify-content: center; font-weight: 600; color: #FFFFFF; border: none;
+    background: linear-gradient(135deg, var(--ng-primary), #0369A1);
+    box-shadow: 0 10px 24px -14px rgba(4, 159, 217, .9);
+}
+.st-key-home_side button:hover { color: #FFFFFF; filter: brightness(1.1); }
+section[data-testid="stSidebar"] [data-testid="stExpander"] .stButton > button { padding: .5rem .7rem; font-size: .8rem; }
+section[data-testid="stSidebar"] [data-testid="stExpander"] summary { font-size: .88rem; }
+.ng-eval-intro {
+    background: linear-gradient(180deg, rgba(22, 34, 59, .92), rgba(17, 26, 46, .92));
+    border: 1px solid var(--ng-border); border-radius: 18px; padding: 1.2rem 1.4rem;
+    margin-bottom: 1rem; animation: ngFadeUp .45s ease both;
+}
+.ng-eval-intro .ng-welcome-text { margin-bottom: 0; }
+.ng-eval-intro code { font-family: var(--ng-mono); font-size: .8rem; color: var(--ng-primary-2); }
+.ng-eval-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; margin-bottom: 1rem; }
+.ng-vs { font-size: .75rem; color: var(--ng-muted); font-weight: 500; }
+
 /* ---------- Chat input ---------- */
 [data-testid="stChatInput"] { border-radius: 16px; }
 [data-testid="stChatInput"]:focus-within { box-shadow: 0 0 0 3px rgba(4, 159, 217, .18); }
@@ -432,6 +494,7 @@ details.ng-source > summary::-webkit-details-marker { display: none; }
 /* ---------- Responsive (tablet & mobile) ---------- */
 @media (max-width: 900px) {
     .ng-usecases { grid-template-columns: 1fr 1fr; }
+    .ng-eval-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 640px) {
     .block-container, [data-testid="stMainBlockContainer"] { padding-left: 1rem; padding-right: 1rem; padding-top: 1.5rem; }
@@ -465,9 +528,17 @@ def shorten(text: str, limit: int) -> str:
     return flat if len(flat) <= limit else flat[: limit - 1].rstrip() + "…"
 
 
+def plural(count: int, word: str) -> str:
+    """'1 document', '3 documents'."""
+    return f"{count} {word}" if count == 1 else f"{count} {word}s"
+
+
 def current_time() -> str:
-    """Timestamp shown under each chat message."""
-    return datetime.now().strftime("%H:%M")
+    """
+    Timestamp shown under each chat message, in Thailand time (UTC+7).
+    Streamlit Cloud servers run on UTC, so the offset is set explicitly.
+    """
+    return datetime.now(DISPLAY_TIMEZONE).strftime("%H:%M")
 
 
 def render_html(markup: str, target=None) -> None:
@@ -753,6 +824,47 @@ def generate_answer(api_key: str, question: str, context: str, history: list[dic
     return response.choices[0].message.content.strip()
 
 
+def is_thai(text: str) -> bool:
+    """True if the text contains Thai characters (Unicode block U+0E00-U+0E7F)."""
+    return bool(re.search(r"[฀-๿]", text))
+
+
+def not_found_message(question: str) -> str:
+    """The 'not found' reply in the same language as the question."""
+    return NOT_FOUND_MESSAGE if is_thai(question) else NOT_FOUND_MESSAGE_EN
+
+
+# The LLM sometimes words the refusal slightly differently, for example
+# "ไม่พบบทความในเอกสารที่มี" or "No relevant information found in the documents".
+# These patterns catch such variants, but only in SHORT replies, so a real
+# answer that happens to contain similar words is never hidden.
+NOT_FOUND_PATTERNS = [
+    r"ไม่พบ.{0,20}ในเอกสาร",
+    r"\b(no|not)\b.{0,40}\b(information|answer|data)\b.{0,40}\b(found|available)\b",
+    r"\b(not|cannot be)\b.{0,20}\bfound\b.{0,30}\bdocuments?\b",
+]
+SHORT_REPLY_CHARS = 200
+
+
+def is_not_found(answer: str) -> bool:
+    """True if the LLM said the answer is not in the documents (in either language)."""
+    if NOT_FOUND_MESSAGE in answer or NOT_FOUND_MESSAGE_EN.lower() in answer.lower():
+        return True
+    if len(answer) <= SHORT_REPLY_CHARS:
+        return any(re.search(p, answer, flags=re.IGNORECASE) for p in NOT_FOUND_PATTERNS)
+    return False
+
+
+def localize_not_found(answer: str, question: str) -> str:
+    """Show the 'not found' reply in the same language as the question."""
+    target = not_found_message(question)
+    if len(answer) <= SHORT_REPLY_CHARS:
+        return target  # the whole reply is a refusal: show the standard message
+    # Long reply with a refusal sentence inside: swap just that sentence
+    answer = answer.replace(NOT_FOUND_MESSAGE, target)
+    return re.sub(re.escape(NOT_FOUND_MESSAGE_EN), target, answer, flags=re.IGNORECASE)
+
+
 def friendly_error(exc: Exception) -> str:
     """Turn API exceptions into messages a user can act on."""
     if isinstance(exc, AuthenticationError):
@@ -779,17 +891,21 @@ def init_session_state() -> None:
         st.session_state.messages = []
     if "pending_question" not in st.session_state:
         st.session_state.pending_question = None
+    if "view" not in st.session_state:
+        st.session_state.view = VIEW_CHAT  # selected page (Chat / Evaluation)
 
 
 def queue_question(question: str) -> None:
     """Button callback: send a suggested question on the next run."""
     st.session_state.pending_question = question
+    st.session_state.view = VIEW_CHAT  # jump back to the chat if another view is open
 
 
-def clear_chat() -> None:
-    """Button callback: remove the whole conversation."""
+def go_home() -> None:
+    """Button callback: clear the conversation and show the welcome screen."""
     st.session_state.messages = []
     st.session_state.pending_question = None
+    st.session_state.view = VIEW_CHAT
 
 
 # =============================================================================
@@ -801,7 +917,7 @@ def inject_css() -> None:
 
 
 def render_sidebar(kb: dict, api_ready: bool) -> None:
-    """Logo, description, statistics and the list of loaded documents."""
+    """Logo, Home button, quick questions, statistics and the loaded documents."""
     documents = kb["documents"]
     with st.sidebar:
         status = (
@@ -824,6 +940,45 @@ def render_sidebar(kb: dict, api_ready: bool) -> None:
             {status}
         """)
 
+        # Most-used actions first, so they never get lost below long lists
+        st.write("")
+        st.button(
+            "🏠  Home · New chat",
+            key="home_side",
+            on_click=go_home,
+            help="Back to the welcome screen and start a new conversation",
+        )
+
+        # Example questions stay available after the welcome screen is gone
+        with st.expander("💡 Example questions"):
+            for i, question in enumerate(SUGGESTED_QUESTIONS):
+                st.button(
+                    f"💬  {question}",
+                    key=f"suggestion_side_{i}",
+                    on_click=queue_question,
+                    args=(question,),
+                    disabled=not api_ready,
+                )
+
+        # Out-of-scope questions, so a reviewer can test the "answer only from
+        # the documents" rule at any point in a conversation.
+        with st.expander("🧪 RAG Guardrail Test", expanded=True):
+            render_html(f"""
+                <div class="ng-side-desc">
+                    Not in the documents. Expected reply: <b>{NOT_FOUND_MESSAGE_EN}</b>
+                    (Thai questions: <b>{NOT_FOUND_MESSAGE}</b>)
+                </div>
+            """)
+            with st.container(key="ng-guardrail-side"):
+                for i, question in enumerate(OUT_OF_SCOPE_QUESTIONS):
+                    st.button(
+                        f"🚫  {question}",
+                        key=f"guardrail_side_{i}",
+                        on_click=queue_question,
+                        args=(question,),
+                        disabled=not api_ready,
+                    )
+
         render_html(f"""
             <div class="ng-section-title">Statistics</div>
             <div class="ng-stat-grid">
@@ -836,23 +991,15 @@ def render_sidebar(kb: dict, api_ready: bool) -> None:
             </div>
         """)
 
-        doc_rows = "".join(
-            f'<div class="ng-doc"><span class="ng-doc-name">📄 {esc(doc["name"])}</span>'
-            f'<span class="ng-doc-meta">{doc["chunk_count"]} chunks</span></div>'
-            for doc in documents
-        )
-        # Scrollable list so the statistics stay visible even with many documents
-        render_html(
-            f'<div class="ng-section-title">Knowledge Base</div>'
-            f'<div class="ng-doc-list">{doc_rows}</div>'
-        )
-
         st.write("")
-        st.button(
-            "🗑️  Clear conversation",
-            on_click=clear_chat,
-            disabled=not st.session_state.messages,
-        )
+        with st.expander(f"📚 Knowledge Base · {len(documents)} documents"):
+            doc_rows = "".join(
+                f'<div class="ng-doc"><span class="ng-doc-name">📄 {esc(doc["name"])}</span>'
+                f'<span class="ng-doc-meta">{doc["chunk_count"]} chunks</span></div>'
+                for doc in documents
+            )
+            render_html(f'<div class="ng-doc-list">{doc_rows}</div>')
+
         render_html(
             '<div class="ng-side-footer">Built with Streamlit · Sentence-Transformers · FAISS · Groq</div>'
         )
@@ -942,6 +1089,26 @@ def render_empty_state(api_ready: bool) -> None:
                 disabled=not api_ready,
             )
 
+    render_html(f"""
+        <div class="ng-section-label">🧪 Test the RAG guardrail · not in the documents</div>
+        <div class="ng-guardrail-note">
+            The AI model already knows these answers from its training, but they are
+            <b>not</b> in the knowledge base. A real RAG system must refuse instead of using outside
+            knowledge: <b>{NOT_FOUND_MESSAGE_EN}</b> (or <b>{NOT_FOUND_MESSAGE}</b> for a Thai question).
+        </div>
+    """)
+    with st.container(key="ng-guardrail-main"):
+        columns = st.columns(2)
+        for i, question in enumerate(OUT_OF_SCOPE_QUESTIONS):
+            with columns[i % 2]:
+                st.button(
+                    f"🚫  {question}",
+                    key=f"guardrail_main_{i}",
+                    on_click=queue_question,
+                    args=(question,),
+                    disabled=not api_ready,
+                )
+
 
 def typing_indicator_html(step: str) -> str:
     """Animated dots and skeleton lines shown while an answer is being generated."""
@@ -962,8 +1129,8 @@ def render_answer_stats(message: dict) -> None:
     documents = unique_documents(sources)
     chips = [
         f'<span class="ng-chip">⏱️ {message["response_time"]:.2f}s response</span>',
-        f'<span class="ng-chip">🧩 {len(sources)} chunks retrieved</span>',
-        f'<span class="ng-chip">📄 {len(documents)} documents referenced</span>',
+        f'<span class="ng-chip">🧩 {plural(len(sources), "chunk")} retrieved</span>',
+        f'<span class="ng-chip">📄 {plural(len(documents), "document")} referenced</span>',
     ]
     if message["status"] == "not_found":
         chips.append('<span class="ng-chip warn">🚫 Answer not in documents</span>')
@@ -1030,7 +1197,7 @@ def render_assistant_body(message: dict) -> None:
             "warn",
             "🔍",
             "No relevant documents found.",
-            f"{esc(NOT_FOUND_MESSAGE)}<br>None of the knowledge-base chunks are similar enough "
+            f"{esc(message['content'])}<br>None of the knowledge-base chunks are similar enough "
             "to your question. Try rephrasing it, or ask about one of the topics in the sidebar.",
         )
     elif message["status"] == "error":
@@ -1064,7 +1231,137 @@ def render_chat_history() -> None:
 
 
 # =============================================================================
-# 10. QUESTION HANDLING (the RAG pipeline end-to-end)
+# 10. EVALUATION VIEW (retrieval quality on test_questions.csv)
+# =============================================================================
+
+def load_test_questions() -> list[dict]:
+    """Read test_questions.csv (columns: id, question, expected_source, answerable, ...)."""
+    with open(TEST_QUESTIONS_FILE, encoding="utf-8-sig", newline="") as file:
+        return list(csv.DictReader(file))
+
+
+@st.cache_data(show_spinner="Running the retrieval evaluation…")
+def run_retrieval_evaluation(_kb: dict) -> dict:
+    """
+    Run every test question through retrieve() only (no LLM, so no API cost).
+    For answerable questions, check where the expected document appears in
+    the top-k chunks. The leading underscore tells Streamlit not to hash _kb.
+    """
+    rows = []
+    for item in load_test_questions():
+        sources = retrieve(item["question"], _kb)
+        retrieved = [s["source"] for s in sources]
+        answerable = item["answerable"].strip().lower() == "yes"
+        expected = item["expected_source"]
+        rank = retrieved.index(expected) + 1 if answerable and expected in retrieved else None
+
+        if not answerable:
+            result = "🧪 LLM must refuse"
+        elif rank:
+            result = f"✅ Hit (rank {rank})"
+        else:
+            result = "❌ Miss"
+
+        rows.append({
+            "ID": int(item["id"]),
+            "Question": item["question"],
+            "Type": "Answerable" if answerable else "Out-of-scope",
+            "Expected document": expected if answerable else "—",
+            "Top retrieved": retrieved[0] if retrieved else "—",
+            "Best score": sources[0]["score"] if sources else 0.0,
+            "Result": result,
+            "_rank": rank,
+        })
+
+    in_scope = [r for r in rows if r["Type"] == "Answerable"]
+    out_scope = [r for r in rows if r["Type"] == "Out-of-scope"]
+
+    def average(values: list[float]) -> float:
+        return sum(values) / len(values) if values else 0.0
+
+    metrics = {
+        "answerable": len(in_scope),
+        "out_of_scope": len(out_scope),
+        "hit_at_k": sum(1 for r in in_scope if r["_rank"]),
+        "hit_at_1": sum(1 for r in in_scope if r["_rank"] == 1),
+        # Mean Reciprocal Rank: 1.0 if the right document is always ranked first
+        "mrr": average([1 / r["_rank"] if r["_rank"] else 0.0 for r in in_scope]),
+        "score_in": average([r["Best score"] for r in in_scope]),
+        "score_out": average([r["Best score"] for r in out_scope]),
+    }
+    return {"rows": rows, "metrics": metrics}
+
+
+def render_evaluation_view(kb: dict) -> None:
+    """Metrics + per-question table showing how well retrieval finds the right document."""
+    render_html(f"""
+        <div class="ng-eval-intro">
+            <div class="ng-welcome-title">📊 Retrieval Evaluation</div>
+            <div class="ng-welcome-text">
+                Every question in <code>test_questions.csv</code> is embedded and searched with the
+                same FAISS index the chat uses. For answerable questions we check whether the
+                expected document is among the top {TOP_K} retrieved chunks. This page calls
+                <b>no LLM</b>, so it is instant and free.
+            </div>
+        </div>
+    """)
+
+    if not TEST_QUESTIONS_FILE.exists():
+        render_alert("warn", "📄", "test_questions.csv not found",
+                     "Add the file next to app.py to see the evaluation.")
+        return
+
+    report = run_retrieval_evaluation(kb)
+    m = report["metrics"]
+    n = max(m["answerable"], 1)
+    render_html(f"""
+        <div class="ng-eval-grid">
+            <div class="ng-stat"><div class="ng-stat-value">{m["hit_at_k"]}/{m["answerable"]}</div>
+                <div class="ng-stat-label">Hit@{TOP_K} · expected doc in top {TOP_K} ({m["hit_at_k"] / n:.0%})</div></div>
+            <div class="ng-stat"><div class="ng-stat-value">{m["hit_at_1"]}/{m["answerable"]}</div>
+                <div class="ng-stat-label">Hit@1 · expected doc ranked first ({m["hit_at_1"] / n:.0%})</div></div>
+            <div class="ng-stat"><div class="ng-stat-value">{m["mrr"]:.2f}</div>
+                <div class="ng-stat-label">MRR · Mean Reciprocal Rank (1.00 = perfect)</div></div>
+            <div class="ng-stat"><div class="ng-stat-value">{m["score_in"]:.2f} <span class="ng-vs">vs</span> {m["score_out"]:.2f}</div>
+                <div class="ng-stat-label">Avg best similarity · answerable vs out-of-scope</div></div>
+        </div>
+    """)
+
+    choice = st.segmented_control(
+        "Show questions",
+        ["All", "Answerable", "Out-of-scope"],
+        default="All",
+        key="eval_filter",
+    )
+    rows = [
+        {key: value for key, value in row.items() if not key.startswith("_")}
+        for row in report["rows"]
+        if choice in (None, "All") or row["Type"] == choice
+    ]
+    st.dataframe(
+        rows,
+        hide_index=True,
+        column_config={
+            "ID": st.column_config.NumberColumn(width="small"),
+            "Question": st.column_config.TextColumn(width="large"),
+            "Best score": st.column_config.ProgressColumn(min_value=0.0, max_value=1.0, format="%.2f"),
+        },
+    )
+
+    render_html(f"""
+        <div class="ng-guardrail-note">
+            <b>Why do out-of-scope questions still retrieve chunks?</b> Vector search always returns
+            the closest passages, even when none of them is relevant. Their similarity is lower
+            (about {m["score_out"]:.2f} on average vs {m["score_in"]:.2f} for answerable questions).
+            The final safeguard is the system prompt: the LLM must answer <b>only</b> from the context,
+            so it replies <b>{NOT_FOUND_MESSAGE_EN}</b> (<b>{NOT_FOUND_MESSAGE}</b> for Thai questions).
+            Try the 🧪 questions in the sidebar to see this live.
+        </div>
+    """)
+
+
+# =============================================================================
+# 11. QUESTION HANDLING (the RAG pipeline end-to-end)
 # =============================================================================
 
 def handle_question(question: str, kb: dict, api_key: str) -> None:
@@ -1097,7 +1394,7 @@ def handle_question(question: str, kb: dict, api_key: str) -> None:
         # Step 2: generation
         if not sources:
             answer["status"] = "no_docs"
-            answer["content"] = NOT_FOUND_MESSAGE
+            answer["content"] = not_found_message(question)
         else:
             render_html(
                 typing_indicator_html(f"Reading {len(sources)} chunks and writing an answer…"),
@@ -1105,8 +1402,10 @@ def handle_question(question: str, kb: dict, api_key: str) -> None:
             )
             try:
                 answer["content"] = generate_answer(api_key, question, build_context(sources), history)
-                if NOT_FOUND_MESSAGE in answer["content"]:
+                if is_not_found(answer["content"]):
                     answer["status"] = "not_found"
+                    # Thai question -> Thai message, otherwise English
+                    answer["content"] = localize_not_found(answer["content"], question)
             except Exception as exc:  # show the problem instead of crashing the app
                 answer["status"] = "error"
                 answer["error"] = friendly_error(exc)
@@ -1121,7 +1420,7 @@ def handle_question(question: str, kb: dict, api_key: str) -> None:
 
 
 # =============================================================================
-# 11. MAIN APP
+# 12. MAIN APP
 # =============================================================================
 
 def main() -> None:
@@ -1143,6 +1442,29 @@ def main() -> None:
 
     api_key = get_api_key()
     render_sidebar(kb, api_ready=api_key is not None)
+
+    # Top bar: Home button + switch between the chat and the evaluation page
+    with st.container(key="ng-topbar"):
+        left, middle, _ = st.columns([1, 2, 1], vertical_alignment="center")
+        with left:
+            st.button(
+                "🏠  Home",
+                key="home_top",
+                on_click=go_home,
+                help="Back to the welcome screen and start a new conversation",
+            )
+        with middle:
+            view = st.segmented_control(
+                "View",
+                [VIEW_CHAT, VIEW_EVAL],
+                key="view",  # starts as VIEW_CHAT, set in init_session_state()
+                label_visibility="collapsed",
+            )
+
+    if view == VIEW_EVAL:
+        render_hero(compact=True)
+        render_evaluation_view(kb)
+        return  # no chat input on this page
 
     # The chat input always stays pinned to the bottom of the page.
     typed_question = st.chat_input(

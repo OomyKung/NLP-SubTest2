@@ -16,13 +16,23 @@ and shows the exact passages it retrieved, so you can check every answer.
 
 ## ✨ Features
 
-- **Modern chat UI**: right-aligned user bubbles, left-aligned assistant cards, avatars, timestamps,
-  an animated typing indicator and fade-in messages
+- **Modern chat UI**: right-aligned user bubbles, left-aligned assistant cards, avatars, timestamps in Thailand
+  time (UTC+7), an animated typing indicator and fade-in messages
+- **Easy navigation**: a 🏠 **Home** button at the top of the page and in the sidebar returns to the welcome screen
+  and starts a new chat. Example questions stay available in the sidebar after the first message
 - **Suggested questions**: one click sends the question
+- **🧪 RAG guardrail test**: one-click out-of-scope questions (on the welcome screen and always in the sidebar).
+  The model knows these answers from its training, but they are not in the documents, so it must refuse.
+  This is an easy way to check that it really answers only from retrieved context.
+- **📊 Evaluation tab**: runs every question in `test_questions.csv` through retrieval (no LLM calls) and shows
+  Hit@5, Hit@1, Mean Reciprocal Rank, and a per-question results table
 - **Sources Used**: an expandable card for each retrieved chunk, with document name, similarity rank and a content preview
 - **Retrieval Panel**: similarity-score bars for the top-k chunks, which makes the RAG step visible in a presentation
 - **Per-answer statistics**: response time, number of chunks retrieved, documents referenced
-- **Grounded answers**: if the answer is not in the documents, the bot replies `ไม่พบข้อมูลในเอกสารที่มี`
+- **Grounded answers**: if the answer is not in the documents, the bot refuses in the question's language:
+  `ไม่พบข้อมูลในเอกสารที่มี` for Thai questions, *"No information was found in the available documents."* for English ones.
+  The system prompt keeps the required Thai sentence. The app recognises the refusal (including small wording
+  variations) and shows it in the question's language
 - **Multilingual**: answers in the same language as the question (e.g. English or Thai)
 - **Session memory**: chat history is stored in `st.session_state`
 - **Follow-up questions**: questions like *"How do I configure it?"* are searched together with the previous question
@@ -268,18 +278,21 @@ The full list of 55 questions is in [`test_questions.csv`](test_questions.csv), 
 
 ### Retrieval check (no API key needed)
 
-Each answerable question was embedded and searched with the app's own `retrieve()` function, to check whether its
-`expected_source` document appears in the top 5 retrieved chunks:
+Open the **📊 Evaluation** tab in the app to run this live. Each answerable question is embedded and searched with
+the app's own `retrieve()` function, to check whether its `expected_source` document appears in the top 5 retrieved chunks:
 
 | Metric                                             | Result                  |
 | -------------------------------------------------- | ----------------------- |
 | Expected document in top 5 (answerable questions)  | **50 / 50**             |
 | Expected document ranked #1                        | **46 / 50**             |
+| Mean Reciprocal Rank (MRR)                         | **0.96**                |
 | Follow-up questions resolved with the previous one | **5 / 5**               |
 | Knowledge-base size                                | 37 documents, 420 chunks |
 
-The 5 unanswerable questions retrieve only loosely related chunks. The LLM is then expected to reply
-`ไม่พบข้อมูลในเอกสารที่มี`, which you can confirm by asking them in the app.
+The 5 unanswerable questions retrieve only loosely related chunks (average best similarity about 0.36, vs 0.62 for
+answerable questions). The system prompt then makes the LLM refuse (`ไม่พบข้อมูลในเอกสารที่มี`, shown in English as
+*"No information was found in the available documents."* for English questions). Click the 🧪 questions
+in the sidebar to see this live. In a live test with Groq, all 5 were refused correctly.
 
 ---
 

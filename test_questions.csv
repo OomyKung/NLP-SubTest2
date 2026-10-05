@@ -49,8 +49,8 @@
 48,What are the default STP timers?,STP.txt,yes,"Hello 2 seconds, forward delay 15 seconds, max age 20 seconds."
 49,What settings must match to form an EtherChannel?,EtherChannel.txt,yes,"Member ports must match speed, duplex, VLAN/access settings and trunk mode/allowed VLANs."
 50,What does the wildcard mask 0.0.0.0 mean in an ACL?,ACL.txt,yes,It matches one exact host address; 'permit 10.1.1.5 0.0.0.0' is the same as 'permit host 10.1.1.5'.
-51,How do you configure BGP route reflectors?,none,no,ไม่พบข้อมูลในเอกสารที่มี
-52,Who is the current CEO of Cisco Systems?,none,no,ไม่พบข้อมูลในเอกสารที่มี
+51,How do you configure BGP route reflectors?,none,no,No information was found in the available documents.
+52,Who is the current CEO of Cisco Systems?,none,no,No information was found in the available documents.
 53,ราคาสวิตช์ Cisco Catalyst 9300 เท่าไหร่,none,no,ไม่พบข้อมูลในเอกสารที่มี
-54,How do you configure IS-IS on a Cisco router?,none,no,ไม่พบข้อมูลในเอกสารที่มี
-55,How do I create a Kubernetes network policy?,none,no,ไม่พบข้อมูลในเอกสารที่มี
+54,How do you configure IS-IS on a Cisco router?,none,no,No information was found in the available documents.
+55,How do I create a Kubernetes network policy?,none,no,No information was found in the available documents.
