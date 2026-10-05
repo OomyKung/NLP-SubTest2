@@ -1,0 +1,106 @@
+ACL (Access Control List)
+
+An Access Control List is an ordered list of permit and deny statements (Access Control Entries, ACEs) that a router uses to filter traffic. ACLs are also used to identify traffic for other features such as NAT and QoS. The router checks each packet against the statements from top to bottom and stops at the first match. Every ACL ends with an invisible "implicit deny any", so at least one permit statement is required or all traffic will be blocked.
+
+ACL processing (top-down and implicit deny):
+1. The router compares the packet with the first ACE.
+2. If it matches, the permit or deny action is taken and no more lines are checked.
+3. If it does not match, the next ACE is checked, in order.
+4. If no ACE matches, the implicit deny drops the packet.
+Because of first-match processing, put specific statements before general ones. An ACL that contains only deny statements blocks everything.
+
+Standard ACL vs Extended ACL:
+
+Standard ACL:
+- Numbered 1-99 and 1300-1999, or named.
+- Filters only on the source IPv4 address.
+- Because it cannot see the destination, it should be placed as close to the destination as possible.
+Router(config)# access-list 10 permit 192.168.10.0 0.0.0.255
+
+Extended ACL:
+- Numbered 100-199 and 2000-2699, or named.
+- Filters on source address, destination address, protocol (IP, TCP, UDP, ICMP), and source/destination port numbers.
+- Because it is very specific, it should be placed as close to the source as possible so unwanted traffic is dropped early.
+Router(config)# access-list 110 permit tcp 192.168.10.0 0.0.0.255 host 10.1.1.5 eq 80
+Router(config)# access-list 110 deny ip any any
+
+Summary of the difference: a standard ACL only checks where the packet came from, while an extended ACL can check where it came from, where it is going, and what application or protocol it uses.
+
+ACL wildcard masks:
+A wildcard mask is the inverse of a subnet mask. A 0 bit means "must match" and a 1 bit means "ignore". The keyword "host" equals a 0.0.0.0 wildcard, and "any" equals 0.0.0.0 255.255.255.255.
+
+ACL wildcard mask calculation:
+Subtract the subnet mask from 255.255.255.255 to get the wildcard mask.
+- /24 (255.255.255.0) gives 0.0.0.255.
+- /26 (255.255.255.192) gives 0.0.0.63.
+- /30 (255.255.255.252) gives 0.0.0.3.
+- /16 (255.255.0.0) gives 0.0.255.255.
+- The range 192.168.16.0 to 192.168.31.255 is 192.168.16.0 0.0.15.255.
+Example: "permit 10.1.1.5 0.0.0.0" is the same as "permit host 10.1.1.5".
+
+ACL extended examples with ports:
+Router(config)# access-list 120 permit tcp any host 10.1.1.10 eq 443
+Router(config)# access-list 120 permit udp any host 10.1.1.53 eq 53
+Router(config)# access-list 120 deny tcp any any eq 23
+Router(config)# access-list 120 permit icmp any any
+Router(config)# access-list 120 permit ip any any
+The keyword eq means equal to a port. Other operators are gt (greater than), lt (less than), neq (not equal), and range. HTTPS is TCP 443, DNS is UDP 53, and Telnet is TCP 23.
+
+Numbered vs named ACLs:
+Numbered ACLs are identified by a number whose range shows the type. Named ACLs use a descriptive name, which makes them easier to understand, and they are configured in a sub-mode.
+
+Named ACLs:
+Router(config)# ip access-list extended WEB-ONLY
+Router(config-ext-nacl)# permit tcp any host 10.1.1.5 eq 443
+
+ACL editing with sequence numbers:
+Each ACE gets a sequence number, by default 10, 20, 30, and so on. You can delete or insert one line without retyping the whole ACL.
+Router(config)# ip access-list extended 110
+Router(config-ext-nacl)# no 20
+Router(config-ext-nacl)# 15 permit tcp any any eq 22
+Router(config)# ip access-list resequence 110 10 10
+New lines without a number are added at the end of the list.
+
+Applying an ACL:
+Only one ACL is allowed per interface, per protocol, per direction.
+Router(config)# interface g0/0
+Router(config-if)# ip access-group 110 in
+To restrict remote management, apply a standard ACL to VTY lines with "access-class 10 in".
+An inbound (in) ACL filters packets as they arrive, before routing. An outbound (out) ACL filters packets leaving the interface. An outbound ACL does not filter traffic created by the router itself.
+
+ACL verification commands:
+show access-lists
+show ip interface g0/0
+Sample show access-lists output:
+Extended IP access list 110
+    10 permit tcp 192.168.10.0 0.0.0.255 host 10.1.1.5 eq www (25 matches)
+    20 deny ip any any (3 matches)
+The match counters (hit counters) show how many packets matched each line. Clear them with clear access-list counters. The show ip interface command shows which ACL is applied in each direction.
+
+ACL troubleshooting and common mistakes:
+- Forgetting the implicit deny, which blocks all other traffic.
+- Wrong line order, so a general line matches before a specific one.
+- Applying the ACL in the wrong direction or on the wrong interface.
+- Using a subnet mask instead of a wildcard mask.
+
+CCNA exam tips for ACL:
+- Standard ACLs go near the destination; extended ACLs go near the source.
+- Wildcard = 255.255.255.255 minus the subnet mask.
+- Use access-class for VTY lines and ip access-group for interfaces.
+
+Common questions about ACL:
+
+Q: What is the implicit deny in an ACL?
+A: Every ACL ends with a hidden deny any statement, so traffic that matches no line is dropped.
+
+Q: What is the wildcard mask for a /26 network?
+A: The wildcard mask for a /26 network is 0.0.0.63.
+
+Q: How many ACLs can be applied to an interface?
+A: One ACL per interface, per protocol, per direction.
+
+Q: How do you see how many packets matched an ACL?
+A: Use show access-lists, which shows a match counter for each line.
+
+Q: Where should a standard ACL be placed?
+A: A standard ACL should be placed as close to the destination as possible, because it filters only on the source address.

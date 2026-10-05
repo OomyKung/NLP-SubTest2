@@ -1,0 +1,76 @@
+Network Fundamentals (Components, Topologies, and Cabling)
+
+Network fundamentals cover the devices that make up a network, how those devices are arranged in a topology, and the cables that connect them. These basics are core CCNA 200-301 topics.
+
+Network fundamentals - network components:
+- Router: forwards packets between IP networks (Layer 3) and connects the LAN to the WAN or Internet.
+- Layer 2 switch: forwards frames inside a LAN using MAC addresses.
+- Layer 3 switch (multilayer switch): switches frames and can also route between VLANs using SVIs.
+- Next-generation firewall: filters traffic using rules, application awareness, and session state.
+- IPS (Intrusion Prevention System): inspects traffic and blocks known attack signatures.
+- Access point (AP): connects wireless clients to the wired network.
+- WLC (Wireless LAN Controller): centrally manages many lightweight APs.
+- Endpoints and servers: PCs, phones, and printers use services; servers provide web, DNS, and email.
+- PoE (Power over Ethernet): lets a switch power APs, IP phones, and cameras over the same UTP cable.
+
+Network fundamentals - firewall vs IPS:
+- A firewall decides which traffic is allowed based on rules (addresses, ports, applications). It is stateful: it tracks sessions, so return traffic for a session started inside is allowed back in.
+- An IPS looks inside allowed traffic for attacks, using signatures of known threats. It sits inline and can drop malicious packets in real time.
+- An IDS (Intrusion Detection System) only detects and alerts; it receives a copy of traffic and does not block it.
+- A next-generation firewall (NGFW) combines firewall, application control (AVC), and IPS features in one device.
+
+Network fundamentals - WLC and access points:
+An autonomous AP is configured one by one. A lightweight AP is managed by a WLC. The AP and WLC talk through a CAPWAP tunnel (UDP 5246 control, UDP 5247 data). The WLC pushes SSIDs, security, and RF settings to all APs from one place.
+
+Network fundamentals - PoE (Power over Ethernet):
+- 802.3af (PoE): up to 15.4 W per port at the switch.
+- 802.3at (PoE+): up to 30 W per port.
+- 802.3bt (PoE++): up to 60 W (Type 3) or 90 W (Type 4) per port.
+The switch is the PSE (power sourcing equipment) and the phone or AP is the PD (powered device). The switch detects a PD before sending power, so a normal PC is not harmed. Verify with "Switch# show power inline".
+
+Network fundamentals - topology architectures:
+- 2-tier (collapsed core): access layer plus a combined distribution/core layer, used in small and medium campuses.
+- 3-tier: separate access, distribution, and core layers for large campuses.
+- Spine-leaf: data center design where every leaf connects to every spine, giving predictable low latency.
+- WAN: connects distant sites using leased lines, MPLS, Internet VPN, or similar services.
+- SOHO: small office/home office, often one device that is router, switch, firewall, and AP.
+- On-premises vs cloud: on-prem resources are owned and run locally; cloud resources are rented (IaaS, PaaS, SaaS).
+
+Network fundamentals - cloud service models:
+- IaaS (Infrastructure as a Service): the provider supplies virtual machines, storage, and networks; the customer manages the OS and applications.
+- PaaS (Platform as a Service): the provider also manages the OS and runtime; the customer deploys code.
+- SaaS (Software as a Service): a finished application used through a browser, such as web email.
+Cloud deployment models are public, private, hybrid, and community.
+
+Network fundamentals - virtualization and VMs:
+A hypervisor runs many virtual machines (VMs) on one physical server. Each VM has its own OS, virtual CPU, memory, and virtual NIC. A Type 1 (bare-metal) hypervisor runs directly on hardware; a Type 2 hypervisor runs on top of a host OS. A virtual switch connects VMs to each other and to the physical NIC.
+
+Network fundamentals - cable types:
+- UTP copper: Cat5e supports 1 Gbps, Cat6 supports 1 Gbps (10 Gbps for short runs up to 55 m), Cat6a supports 10 Gbps to 100 m.
+- Multimode fiber: larger core, LED or VCSEL light source, cheaper, used for shorter distances inside buildings.
+- Single-mode fiber: small core, laser light source, more expensive, reaches many kilometers.
+The maximum length of a UTP Ethernet cable is 100 meters for 10BASE-T, 100BASE-TX, and 1000BASE-T. For longer distances, use fiber.
+
+Network fundamentals - straight-through vs crossover:
+A straight-through cable connects unlike devices, such as a PC to a switch or a switch to a router. A crossover cable connects like devices, such as switch to switch or PC to PC. Modern Cisco switches support auto-MDIX, which detects the cable type and adjusts automatically, enabled with "Switch(config-if)# mdix auto".
+
+CCNA exam tips for network fundamentals:
+- Know the UTP limit of 100 meters and when to choose single-mode vs multimode fiber.
+- An IDS only alerts; an IPS sits inline and blocks.
+- SaaS = ready app, PaaS = platform for your code, IaaS = virtual hardware.
+
+Common questions about network fundamentals:
+Q: What is the maximum length of a UTP cable?
+A: A UTP Ethernet cable can be up to 100 meters long.
+
+Q: How much power does PoE provide?
+A: 802.3af PoE gives up to 15.4 W, PoE+ gives up to 30 W, and 802.3bt gives up to 60 or 90 W per port.
+
+Q: What is the difference between a firewall and an IPS?
+A: A firewall permits or denies traffic by rules, while an IPS inspects traffic for attack signatures and drops malicious packets.
+
+Q: What does a WLC do?
+A: A WLC centrally manages lightweight APs through CAPWAP tunnels.
+
+Q: What is a hypervisor?
+A: A hypervisor is software that runs multiple virtual machines on one physical server.

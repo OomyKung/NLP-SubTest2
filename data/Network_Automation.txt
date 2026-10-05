@@ -1,0 +1,88 @@
+Network Automation and SDN
+
+Network automation uses software to configure, monitor, and manage network devices instead of typing CLI commands on each device one by one. The CCNA covers how automation and controller-based networking change network management.
+
+Benefits of network automation:
+- Fewer human errors and consistent configurations.
+- Faster deployment of changes across many devices.
+- Easier scaling, auditing, and compliance checking.
+- Lower operating cost, letting engineers focus on design.
+- Configuration drift is detected and corrected automatically.
+- Data is collected from many devices for faster troubleshooting.
+
+Network automation key terms:
+- API: a defined way for software to talk to other software.
+- Data model: a structured description of device data, such as YANG.
+- Data format: how data is written, such as JSON, XML, or YAML.
+- Configuration drift: when a device configuration slowly differs from the standard.
+
+Traditional vs controller-based networking for network automation:
+In traditional networking, every device has its own control plane and is configured individually. In controller-based networking, a central controller holds the network view and pushes configuration to devices through APIs.
+
+Controller-based architectures for network automation:
+In a controller-based architecture, the controller sits between applications and devices. Applications send requests to the controller through northbound APIs, and the controller configures the devices through southbound APIs. Examples are Cisco Catalyst Center for campus networks, Cisco SD-WAN (vManage) for WAN networks, and Cisco ACI with APIC for data centers. The administrator manages the whole network as one system instead of box by box.
+
+SDN planes:
+- Data plane: forwards frames and packets, for example MAC table lookups.
+- Control plane: makes decisions about how to forward traffic, such as OSPF, STP, and ARP.
+- Management plane: used to manage devices, such as SSH, SNMP, and syslog.
+Software-Defined Networking (SDN) centralizes much of the control plane in a controller.
+
+Northbound and southbound APIs in SDN:
+Northbound APIs let applications and scripts talk to the controller, usually with REST APIs and JSON. Southbound APIs let the controller talk to devices, using protocols such as NETCONF, RESTCONF, OpenFlow, or SSH.
+
+Cisco DNA Center and SD-Access in SDN:
+Cisco DNA Center, now Catalyst Center, is the controller for enterprise campus networks. In SD-Access, the underlay is the physical network that provides IP connectivity, the overlay is the virtual network built with tunnels such as VXLAN, and the fabric is the combination of both.
+
+Intent-based networking and network automation:
+The administrator describes the desired outcome, such as a policy, and the controller translates that intent into device configurations and verifies them.
+
+Configuration management tools for network automation:
+- Ansible: agentless, uses a push model over SSH, and uses YAML playbooks.
+- Puppet: agent-based, uses a pull model, and uses manifests written in a declarative language.
+- Chef: agent-based, uses a pull model, and uses recipes and cookbooks written in Ruby.
+
+NETCONF and RESTCONF:
+NETCONF uses XML over SSH (TCP 830) and RESTCONF uses HTTPS with JSON or XML. Both use YANG data models.
+
+NETCONF and RESTCONF comparison for network automation:
+- NETCONF runs over SSH on TCP port 830 and encodes data in XML.
+- NETCONF uses operations such as get, get-config, edit-config, and delete-config.
+- RESTCONF runs over HTTPS (TCP 443) and encodes data in JSON or XML.
+- RESTCONF uses HTTP methods: GET, POST, PUT, PATCH, and DELETE.
+- Both use YANG models, which describe the structure of device data such as interfaces.
+
+Python in network automation:
+Python is the most common language for network automation scripts. A script can send REST API requests with the requests library, connect to devices over SSH with libraries such as Netmiko, and parse JSON responses into dictionaries and lists. Python lets engineers repeat a task, such as collecting show output from 100 switches, in seconds.
+
+AI and machine learning in network operations:
+AI and machine learning (ML) help controllers analyze large amounts of network data. They learn normal baseline behavior, detect anomalies, predict problems before users notice, and suggest fixes. Catalyst Center AI Network Analytics is an example. Generative AI assistants can also help write configurations and explain issues.
+
+Network automation troubleshooting tips:
+- API calls fail with 401: the token is missing or expired.
+- NETCONF session fails: check that netconf-yang is enabled and TCP 830 is reachable.
+- Ansible task fails: check the YAML indentation and SSH credentials.
+
+CCNA exam tips for network automation:
+- Northbound is controller to applications; southbound is controller to devices.
+- Ansible is agentless and push; Puppet and Chef are agent-based and pull.
+- NETCONF uses XML over SSH port 830; RESTCONF uses HTTPS with JSON or XML.
+
+Common questions about network automation:
+Q: What port does NETCONF use?
+A: NETCONF uses SSH on TCP port 830.
+
+Q: What data model do NETCONF and RESTCONF use?
+A: Both NETCONF and RESTCONF use YANG data models.
+
+Q: What is a southbound API?
+A: A southbound API lets the controller communicate with network devices.
+
+Q: Which configuration management tool is agentless?
+A: Ansible is agentless and uses a push model over SSH.
+
+Q: What does the underlay mean in SD-Access?
+A: The underlay is the physical network that provides IP connectivity for the overlay.
+
+Q: How does AI help network operations?
+A: AI and ML learn baseline behavior, detect anomalies, and predict problems.

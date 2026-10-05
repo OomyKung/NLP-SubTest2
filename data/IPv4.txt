@@ -1,0 +1,91 @@
+IPv4 Addressing
+
+An IPv4 address is a 32-bit logical address used at Layer 3 to identify a host interface. IPv4 addresses are written in dotted decimal notation as four 8-bit octets, for example 192.168.1.10. Each IPv4 address has a network portion and a host portion, and the subnet mask (such as 255.255.255.0 or /24) shows where the network portion ends.
+
+IPv4 address classes (classful addressing):
+- Class A: first octet 1-126, default mask 255.0.0.0 (/8).
+- Class B: first octet 128-191, default mask 255.255.0.0 (/16).
+- Class C: first octet 192-223, default mask 255.255.255.0 (/24).
+- Class D: 224-239, used for multicast.
+- Class E: 240-255, reserved for experimental use.
+Today networks use classless addressing (CIDR), but classes are still tested on the CCNA.
+
+IPv4 private addresses (RFC 1918):
+- 10.0.0.0/8 (10.0.0.0 to 10.255.255.255)
+- 172.16.0.0/12 (172.16.0.0 to 172.31.255.255)
+- 192.168.0.0/16 (192.168.0.0 to 192.168.255.255)
+Private addresses are not routed on the Internet and need NAT to reach public networks.
+
+IPv4 special addresses:
+- Loopback 127.0.0.0/8: 127.0.0.1 tests the local TCP/IP stack.
+- APIPA (link-local) 169.254.0.0/16: a host assigns itself one of these when it cannot reach a DHCP server.
+- 0.0.0.0: means "this host" or, in routing, the default route.
+
+Types of IPv4 traffic:
+- Unicast: one sender to one receiver.
+- Broadcast: one sender to all hosts in the subnet, for example 192.168.1.255 for 192.168.1.0/24, or 255.255.255.255 (limited broadcast).
+- Multicast: one sender to a group of subscribed hosts, using 224.0.0.0 to 239.255.255.255. OSPF uses 224.0.0.5.
+
+Key IPv4 header fields:
+- Version (4), header length, and total length.
+- TTL (Time To Live): decreased by 1 at each router; the packet is dropped when it reaches 0, preventing loops.
+- Protocol: identifies the payload, for example 1 = ICMP, 6 = TCP, 17 = UDP, 89 = OSPF.
+- Source and destination IPv4 addresses (32 bits each).
+
+IPv4 header fields in detail:
+- Version (4 bits): always 4 for IPv4.
+- IHL, Internet Header Length (4 bits): the header is 20 bytes without options and up to 60 bytes.
+- DSCP (6 bits): Differentiated Services Code Point, used for QoS marking, for example EF (46) for voice.
+- ECN (2 bits): Explicit Congestion Notification, signals congestion without dropping packets. DSCP and ECN together were once the ToS byte.
+- Total Length (16 bits): header plus data, maximum 65535 bytes.
+- Identification, Flags, and Fragment Offset: used for fragmentation.
+- TTL (8 bits), Protocol (8 bits), and Header Checksum (16 bits), which is recalculated at every router because TTL changes.
+
+IPv4 fragmentation:
+If a packet is larger than the MTU of the outgoing link (1500 bytes on Ethernet), a router can split it into fragments. All fragments share the same Identification value. The MF (More Fragments) flag is set on every fragment except the last, and the Fragment Offset shows where each piece belongs. Only the destination host reassembles the fragments. If the DF (Don't Fragment) flag is set, the router drops the packet and sends an ICMP "fragmentation needed" message back. IPv6 routers never fragment.
+
+IPv4 default gateway:
+The default gateway is the IP address of the router interface on the host's own subnet. A host compares the destination IP with its own address and mask. If the destination is on the same subnet, it sends directly; if not, it sends the frame to the default gateway. Without a correct default gateway, a host can reach local devices but not other networks. On a switch, the gateway for management traffic is set with "Switch(config)# ip default-gateway 192.168.1.1".
+
+Configuring an IPv4 interface address:
+Router(config)# interface gi0/0
+Router(config-if)# ip address 192.168.1.1 255.255.255.0
+Router(config-if)# no shutdown
+
+IPv4 verification on a router:
+Router# show ip interface brief
+This lists each interface, its IP address, and its Status and Protocol state. "up/up" means the interface is working, and "administratively down" means it is shut down.
+
+Verifying IPv4 on a Windows PC:
+- ipconfig: shows IPv4 address, subnet mask, and default gateway.
+- ipconfig /all: also shows the MAC address, DHCP server, lease, and DNS servers.
+- ipconfig /release and ipconfig /renew: give back and request a DHCP address.
+- ping 192.168.1.1: tests reachability with ICMP echo request and echo reply.
+- tracert 8.8.8.8: lists each router hop to the destination using increasing TTL values.
+
+IPv4 troubleshooting steps on a host:
+1. Run ipconfig. A 169.254.x.x address means DHCP failed.
+2. Ping 127.0.0.1 to test the local TCP/IP stack.
+3. Ping the default gateway to test the local subnet.
+4. Ping a remote IP, then use tracert to see where traffic stops.
+
+CCNA exam tips for IPv4:
+- The IPv4 header is 20 bytes minimum; TTL prevents loops.
+- DSCP is 6 bits for QoS; ECN is 2 bits.
+- A host with a wrong default gateway can ping local hosts but not remote ones.
+
+Common questions about IPv4:
+Q: What is the minimum size of an IPv4 header?
+A: The IPv4 header is 20 bytes without options and up to 60 bytes with options.
+
+Q: What is the DSCP field?
+A: DSCP is a 6-bit field in the IPv4 header used to mark packets for QoS.
+
+Q: What does a default gateway do?
+A: The default gateway is the router a host sends traffic to when the destination is on another subnet.
+
+Q: How do you check the IP address on Windows?
+A: Use "ipconfig", or "ipconfig /all" for more detail such as MAC address and DNS servers.
+
+Q: What happens if a packet with the DF bit set is larger than the MTU?
+A: The router drops it and sends an ICMP fragmentation needed message to the sender.

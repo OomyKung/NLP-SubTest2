@@ -1,0 +1,103 @@
+WLAN (Wireless LAN)
+
+A WLAN connects devices using radio waves instead of cables, based on the IEEE 802.11 family of standards. Wireless is a shared, half-duplex medium, so clients use CSMA/CA to avoid collisions. CCNA covers WLAN standards, components, architectures, and security.
+
+WLAN IEEE 802.11 standards:
+- 802.11a: 5 GHz, up to 54 Mbps.
+- 802.11b: 2.4 GHz, up to 11 Mbps.
+- 802.11g: 2.4 GHz, up to 54 Mbps.
+- 802.11n (Wi-Fi 4): 2.4 and 5 GHz, MIMO, up to 600 Mbps.
+- 802.11ac (Wi-Fi 5): 5 GHz, multi-gigabit speeds.
+- 802.11ax (Wi-Fi 6): 2.4 and 5 GHz (6 GHz with Wi-Fi 6E), better efficiency in dense areas.
+
+WLAN RF basics:
+Wi-Fi sends data on radio frequency (RF) bands. The 2.4 GHz band reaches farther but has few channels and more interference. The 5 GHz band has shorter range but more channels and higher speeds. Interference comes from other APs on the same channel (co-channel interference) or on overlapping channels, and from non-Wi-Fi devices such as microwave ovens, Bluetooth, and cordless phones.
+
+WLAN channels:
+In the 2.4 GHz band, only channels 1, 6, and 11 do not overlap, so neighboring APs should use these. The 5 GHz band has many more non-overlapping channels and less interference.
+
+WLAN CSMA/CA process:
+Wireless clients cannot detect collisions while sending, so they try to avoid them.
+1. The client listens to check that the channel is idle.
+2. If the channel is busy, it waits for a random backoff timer.
+3. The client sends the frame.
+4. The receiver returns an ACK. If no ACK arrives, the sender assumes a collision and retransmits.
+
+WLAN 802.11 frame types:
+- Management frames: beacon, probe request and response, authentication, association request and response, disassociation, and deauthentication.
+- Control frames: RTS, CTS, and ACK, which control access to the medium.
+- Data frames: carry the user data.
+
+WLAN client association process:
+1. The AP sends beacons (passive scanning), or the client sends a probe request and the AP answers with a probe response (active scanning).
+2. The client and AP exchange authentication frames (open system authentication).
+3. The client sends an association request and the AP replies with an association response.
+4. With WPA2 or WPA3, a 4-way handshake (after 802.1X in Enterprise mode) creates the encryption keys.
+
+WLAN terms:
+- SSID: the network name that clients see.
+- BSS: one AP and its associated clients.
+- BSSID: the MAC address of the AP radio that identifies a BSS.
+- ESS: multiple BSSs with the same SSID joined by a wired network, allowing roaming.
+- IBSS: an ad hoc network between clients with no AP.
+
+WLAN autonomous and lightweight APs:
+An autonomous AP is configured individually and works on its own. A lightweight AP is managed by a Wireless LAN Controller (WLC) in a split-MAC design. Lightweight APs build CAPWAP tunnels to the WLC: UDP 5246 for control (encrypted) and UDP 5247 for data.
+
+WLAN AP modes:
+- Local: default mode, serves clients and tunnels traffic to the WLC.
+- FlexConnect: switches client traffic locally and can keep working if the WLC link fails.
+- Monitor: does not serve clients, scans for rogue devices.
+- Sniffer: captures 802.11 frames and sends them to an analyzer.
+- Bridge: connects remote sites or builds a mesh network.
+
+WLAN WLC deployment models:
+- Centralized (unified): a hardware WLC in a central location, up to 6000 APs.
+- Cloud-based: the WLC runs as a virtual machine in a cloud or data center, up to 3000 APs.
+- Embedded: the WLC is built into an access layer switch, up to 200 APs.
+- Mobility Express: the WLC runs on an AP, up to 100 APs.
+
+WLAN WLC ports and LAG:
+WLC physical ports include the service port (out-of-band management), distribution system ports (connected to a switch trunk for data), the console port, and the redundancy port. LAG bundles the distribution system ports into one logical link, like EtherChannel. A WLC supports only static LAG, not LACP or PAgP, so the switch must use mode on:
+Switch(config-if-range)# channel-group 1 mode on
+
+WLAN security:
+- WPA: uses TKIP, now outdated.
+- WPA2: uses AES-CCMP encryption.
+- WPA3: uses SAE instead of a PSK handshake, stronger against password guessing.
+Personal mode uses a pre-shared key (PSK). Enterprise mode uses 802.1X with a RADIUS server so each user logs in with their own credentials.
+
+WLAN 802.1X and RADIUS:
+802.1X has three roles: the supplicant (wireless client), the authenticator (AP or WLC), and the authentication server (RADIUS, such as Cisco ISE). The client sends EAP messages to the WLC, which relays them to the RADIUS server. RADIUS uses UDP 1812 for authentication and UDP 1813 for accounting. Common EAP methods are PEAP, EAP-TLS, and EAP-FAST.
+
+Creating a WLAN on a WLC GUI:
+1. Go to WLANs, choose Create New, enter a profile name and SSID.
+2. Set the WLAN to Enabled and map it to an interface (VLAN).
+3. Under Security, select WPA2 or WPA3 and PSK or 802.1X, then enter the key or RADIUS server.
+4. Apply the changes.
+
+WLAN troubleshooting tips:
+- Slow 2.4 GHz clients: check for overlapping channels; use 1, 6, and 11.
+- Enterprise login fails: check the RADIUS server IP and shared secret on the WLC.
+- WLC LAG down: the switch side must use channel-group mode on.
+
+CCNA exam tips for WLAN:
+- Know CAPWAP ports UDP 5246 (control) and 5247 (data).
+- Remember WPA2 uses AES-CCMP and WPA3 uses SAE.
+- Know the four WLC deployment models and the AP modes.
+
+Common questions about WLAN:
+Q: Which 2.4 GHz channels do not overlap?
+A: Channels 1, 6, and 11 are the non-overlapping channels in the 2.4 GHz band.
+
+Q: What are the three 802.11 frame types?
+A: The three 802.11 frame types are management, control, and data frames.
+
+Q: Does a WLC support LACP for LAG?
+A: No, a WLC supports only static LAG, so the switch uses channel-group mode on.
+
+Q: What ports does RADIUS use?
+A: RADIUS uses UDP 1812 for authentication and UDP 1813 for accounting.
+
+Q: What is the default mode of a lightweight AP?
+A: Local mode is the default lightweight AP mode.

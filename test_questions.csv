@@ -1,0 +1,56 @@
+﻿id,question,expected_source,answerable,expected_answer_summary
+1,What is VLAN?,VLAN.txt,yes,"A logical group of devices sharing one broadcast domain across switches; reduces broadcasts, improves security, groups users by function."
+2,What is the difference between an access port and a trunk port?,VLAN.txt,yes,"Access port carries one VLAN to an end device; trunk carries multiple VLANs using 802.1Q tags, native VLAN untagged."
+3,How is the STP root bridge elected?,STP.txt,yes,Lowest Bridge ID wins (priority default 32768 + extended system ID + MAC); lowest MAC breaks ties.
+4,What is the difference between LACP and PAgP?,EtherChannel.txt,yes,PAgP is Cisco proprietary (desirable/auto); LACP is IEEE 802.3ad open standard (active/passive).
+5,How do you configure router-on-a-stick?,InterVLAN_Routing.txt,yes,Create one subinterface per VLAN with 'encapsulation dot1q <vlan>' and an IP address used as the VLAN default gateway; physical interface connects to a trunk.
+6,Explain OSPF Areas.,OSPF.txt,yes,Areas split the network to shrink the LSDB and SPF work; Area 0 is the backbone; ABRs connect areas; ASBRs redistribute external routes.
+7,What is a feasible successor in EIGRP?,EIGRP.txt,yes,A loop-free backup route whose reported distance is less than the current feasible distance (feasibility condition).
+8,How does DHCP Relay work?,DHCP.txt,yes,Router forwards client DHCP broadcasts as unicast to a server on another subnet using 'ip helper-address' on the client-facing interface.
+9,What is PAT and how is it configured?,NAT.txt,yes,Many inside hosts share one public IP using unique ports; 'ip nat inside source list 1 interface g0/1 overload' plus inside/outside interface roles.
+10,Difference between Standard and Extended ACL?,ACL.txt,yes,"Standard (1-99) filters source IP only, placed near destination; Extended (100-199) filters source, destination, protocol and ports, placed near source."
+11,What does up/down mean in show ip interface brief?,Network_Troubleshooting.txt,yes,Usually a Layer 2 problem such as an encapsulation mismatch.
+12,VLAN คืออะไร,VLAN.txt,yes,(Thai question) Answer in Thai: VLAN is a logical broadcast domain grouping devices across switches.
+13,What is the difference between single-mode and multimode fiber?,Network_Fundamentals.txt,yes,"Multimode: larger core, LED/VCSEL, cheaper, shorter distances; single-mode: small core, laser, more expensive, reaches many kilometers."
+14,What is the PDU name at each layer of the OSI model?,OSI_Model.txt,yes,"Layers 5-7 data, Layer 4 segment (or datagram), Layer 3 packet, Layer 2 frame, Layer 1 bits."
+15,Explain the TCP three-way handshake.,TCP_IP.txt,yes,"Client sends SYN, server replies SYN-ACK, client sends ACK and the connection is established."
+16,What is the difference between TCP and UDP?,TCP_IP.txt,yes,"TCP is connection-oriented and reliable (ACKs, retransmission, windowing, 20-byte header); UDP is connectionless best-effort with an 8-byte header."
+17,What are runts and giants on an Ethernet interface?,Ethernet.txt,yes,Runts are frames smaller than 64 bytes; giants are frames larger than the maximum frame size.
+18,How long do dynamic entries stay in the MAC address table?,MAC_Addressing.txt,yes,Dynamically learned MAC entries age out after 300 seconds (5 minutes) of inactivity by default.
+19,What is gratuitous ARP?,ARP.txt,yes,An unsolicited ARP reply about the host's own IP; updates other caches and detects duplicate IPs; used by HSRP during failover.
+20,What are the RFC 1918 private IPv4 address ranges?,IPv4.txt,yes,"10.0.0.0/8, 172.16.0.0/12 and 192.168.0.0/16."
+21,How many usable hosts are in a /26 subnet?,Subnetting.txt,yes,6 host bits: 2^6 - 2 = 62 usable hosts (block size 64).
+22,What is the network address of 172.16.45.130/20?,Subnetting.txt,yes,"Block size 16 in the third octet: network 172.16.32.0, broadcast 172.16.47.255."
+23,IPv6 link-local address คืออะไร,IPv6.txt,yes,"(Thai question) Answer in Thai: FE80::/10 address created automatically on every IPv6 interface, valid only on the local link, used as next hop by routing protocols."
+24,How does EUI-64 create an IPv6 interface ID?,IPv6.txt,yes,"Split the 48-bit MAC in half, insert FFFE in the middle and flip the 7th bit of the first byte."
+25,What happens if both ends of a link use DTP dynamic auto?,Trunking.txt,yes,auto + auto results in an access link; a trunk needs desirable or trunk mode on at least one side.
+26,What are the port roles in RSTP?,RSTP.txt,yes,"Root, designated, alternate, backup and disabled."
+27,RSTP ต่างจาก STP อย่างไร,RSTP.txt,yes,"(Thai question) Answer in Thai: RSTP (802.1w) converges in seconds using proposal/agreement instead of timers (STP 30-50 s), and has 3 port states (discarding, learning, forwarding)."
+28,What is the difference between a recursive and an iterative DNS query?,DNS.txt,yes,Recursive: resolver returns the final answer; iterative: server returns the best referral and the asker queries the next server itself.
+29,Which 2.4 GHz Wi-Fi channels do not overlap?,WLAN.txt,yes,"Channels 1, 6 and 11."
+30,What is the difference between WPA2 and WPA3?,WLAN.txt,yes,"WPA2 uses AES-CCMP with PSK or 802.1X; WPA3 uses SAE instead of the PSK handshake, stronger against password guessing."
+31,How do I configure SSH on a Cisco router?,SSH.txt,yes,"hostname, ip domain-name, crypto key generate rsa modulus 2048, username/secret, ip ssh version 2, line vty 0 4 with login local and transport input ssh."
+32,What are the eight Syslog severity levels?,Syslog.txt,yes,"0 Emergency, 1 Alert, 2 Critical, 3 Error, 4 Warning, 5 Notification, 6 Informational, 7 Debugging."
+33,What is the difference between SNMPv2c and SNMPv3?,SNMP.txt,yes,"v2c uses plaintext community strings; v3 adds users/groups with authentication and encryption (noAuthNoPriv, authNoPriv, authPriv)."
+34,What does NTP stratum mean?,NTP.txt,yes,"Distance from a reference clock: stratum 0 reference, 1 directly connected, max usable 15, 16 = unsynchronized; lower is more accurate."
+35,What is the difference between RADIUS and TACACS+?,Network_Security.txt,yes,"RADIUS: UDP 1812/1813, combines authN/authZ, encrypts only password; TACACS+: Cisco, TCP 49, separates AAA, encrypts whole payload."
+36,What are the port security violation modes?,Device_Hardening.txt,yes,"shutdown (default, err-disable + log + counter), restrict (drop + log + counter, port up), protect (drop silently)."
+37,Which DSCP value is used for voice traffic?,QoS.txt,yes,"EF (Expedited Forwarding), DSCP 46, usually placed in an LLQ priority queue."
+38,"Compare Ansible, Puppet and Chef.",Network_Automation.txt,yes,"Ansible: agentless, push over SSH, YAML playbooks; Puppet: agent, pull, manifests; Chef: agent, pull, Ruby recipes/cookbooks."
+39,What data types does JSON support?,JSON.txt,yes,"String, number, boolean, null, object and array."
+40,Which HTTP methods map to CRUD operations in REST?,REST_APIs.txt,yes,"POST = create, GET = read, PUT/PATCH = update, DELETE = delete."
+41,"What is administrative distance, and what is the AD of OSPF and EIGRP?",IP_Routing.txt,yes,"AD is the trustworthiness of a route source (lower is better); OSPF = 110, internal EIGRP = 90 (connected 0, static 1)."
+42,How does longest prefix match work?,IP_Routing.txt,yes,The router picks the most specific matching route; for 10.1.1.5 it prefers 10.1.1.0/24 over 10.1.0.0/16 and 0.0.0.0/0.
+43,How do you configure a floating static route?,Static_Routing.txt,yes,"A backup static route with a higher AD than the primary route (e.g. AD 130 behind OSPF's 110), added as the last argument of 'ip route'; used only if the primary route disappears."
+44,What is the default HSRP priority and is preemption enabled by default?,FHRP.txt,yes,Default priority 100 (highest wins); preemption is disabled by default and enabled with 'standby <group> preempt'.
+45,HSRP กับ VRRP ต่างกันอย่างไร,FHRP.txt,yes,(Thai question) Answer in Thai: HSRP is Cisco proprietary with active/standby and preempt off by default; VRRP is an open standard with master/backup and preempt on by default.
+46,What is the difference between CDP and LLDP?,CDP_LLDP.txt,yes,"CDP: Cisco proprietary, every 60 s, holdtime 180 s, enabled by default; LLDP: IEEE 802.1AB, every 30 s, holdtime 120 s, disabled by default (lldp run)."
+47,What are the OSPF neighbor states?,OSPF.txt,yes,"Down, Init, 2-Way, ExStart, Exchange, Loading, Full."
+48,What are the default STP timers?,STP.txt,yes,"Hello 2 seconds, forward delay 15 seconds, max age 20 seconds."
+49,What settings must match to form an EtherChannel?,EtherChannel.txt,yes,"Member ports must match speed, duplex, VLAN/access settings and trunk mode/allowed VLANs."
+50,What does the wildcard mask 0.0.0.0 mean in an ACL?,ACL.txt,yes,It matches one exact host address; 'permit 10.1.1.5 0.0.0.0' is the same as 'permit host 10.1.1.5'.
+51,How do you configure BGP route reflectors?,none,no,ไม่พบข้อมูลในเอกสารที่มี
+52,Who is the current CEO of Cisco Systems?,none,no,ไม่พบข้อมูลในเอกสารที่มี
+53,ราคาสวิตช์ Cisco Catalyst 9300 เท่าไหร่,none,no,ไม่พบข้อมูลในเอกสารที่มี
+54,How do you configure IS-IS on a Cisco router?,none,no,ไม่พบข้อมูลในเอกสารที่มี
+55,How do I create a Kubernetes network policy?,none,no,ไม่พบข้อมูลในเอกสารที่มี

@@ -1,0 +1,86 @@
+Static Routing
+
+A static route is a route that an administrator configures manually on a router. Static routes do not change unless someone edits them, use no bandwidth for routing updates, and are easy to predict. The default administrative distance of a static route is 1. Static routing works well for small networks, stub networks with one exit, and default routes toward an ISP.
+
+Static routing key terms:
+- Next hop: the IP address of the neighbor router that should receive the packet.
+- Exit interface: the local interface used to send the packet.
+- Default route: a route to 0.0.0.0/0 that matches every destination.
+- Floating static route: a backup static route with a higher administrative distance.
+- Host route: a route to a single address with a /32 mask.
+- Stub network: a network with only one path to the rest of the network.
+
+Static routing IPv4 syntax:
+Router(config)# ip route <network> <mask> <next-hop or exit-interface> [administrative-distance]
+Three forms are common:
+- Next-hop route: Router(config)# ip route 192.168.2.0 255.255.255.0 10.1.1.2
+- Directly connected (exit interface) route: Router(config)# ip route 192.168.2.0 255.255.255.0 g0/1
+- Fully specified route: Router(config)# ip route 192.168.2.0 255.255.255.0 g0/1 10.1.1.2
+
+Static routing next-hop vs exit interface:
+A next-hop static route needs a recursive lookup: the router must look up the next-hop address in the routing table to find the exit interface. An exit-interface static route on an Ethernet link makes the router ARP for every destination, which is inefficient and depends on proxy ARP. A fully specified static route lists both the exit interface and the next hop, so no recursive lookup is needed. It is the recommended form on Ethernet multiaccess links.
+
+Static routing recursive lookup example:
+With "ip route 192.168.2.0 255.255.255.0 10.1.1.2", a packet for 192.168.2.5 first matches the static route. The router then looks up 10.1.1.2, finds the connected route 10.1.1.0/30 on G0/0, and sends the packet out G0/0. If the next hop is not reachable, the static route is not installed in the routing table.
+
+Static default route:
+Router(config)# ip route 0.0.0.0 0.0.0.0 203.0.113.1
+A default route matches all destinations because its prefix length is 0. It is used only when no more specific route matches. It appears in the routing table as S* 0.0.0.0/0 and sets the gateway of last resort. Default routes are common on edge routers that connect to an ISP.
+
+Static routing floating static route:
+A floating static route is a backup route that has a higher administrative distance than the primary route, so it stays out of the routing table while the primary route exists. If OSPF (AD 110) is the primary path, a backup static route with AD 130 is used only when the OSPF route disappears:
+Router(config)# ip route 0.0.0.0 0.0.0.0 198.51.100.1 130
+If the primary is another static route with AD 1, the backup can use AD 5:
+Router(config)# ip route 192.168.2.0 255.255.255.0 10.2.2.2 5
+
+Static routing host route:
+A host route points to one IP address with a /32 mask (255.255.255.255), for example a single server:
+Router(config)# ip route 192.168.5.10 255.255.255.255 10.1.1.2
+Because /32 is the longest possible prefix, a host route is always preferred over shorter matching routes.
+
+IPv6 static routing:
+IPv6 routing must be enabled first with "ipv6 unicast-routing".
+Router(config)# ipv6 unicast-routing
+Router(config)# ipv6 route 2001:db8:2::/64 2001:db8:12::2
+Router(config)# ipv6 route ::/0 2001:db8:12::1
+The route ::/0 is the IPv6 default route. When the next hop is a link-local address (FE80::), the exit interface must also be given, for example: ipv6 route 2001:db8:2::/64 g0/0 fe80::2
+
+Static routing verification:
+Router# show ip route static
+S     192.168.2.0/24 [1/0] via 10.1.1.2
+S*    0.0.0.0/0 [1/0] via 203.0.113.1
+The [1/0] shows AD 1 and metric 0. Also use "show ipv6 route static", "show running-config | include ip route", ping, and traceroute.
+
+Static routing troubleshooting and common mistakes:
+- Wrong network or subnet mask, so the route does not match the destination.
+- Wrong next-hop address or a next hop that is not reachable, so the route is not installed.
+- Forgetting the return route: the remote router also needs a route back.
+- Floating static route with an AD lower than the primary, so it becomes active immediately.
+- Forgetting "ipv6 unicast-routing" for IPv6 static routes.
+
+Static routing vs dynamic routing:
+- Static routes use no CPU or bandwidth for updates; dynamic protocols send hellos and updates.
+- Static routes do not adapt to failures unless a floating static route is configured; dynamic routing reroutes automatically.
+- Static routing is secure and predictable but hard to manage in large networks; dynamic routing scales better.
+
+CCNA exam tips for static routing:
+- The default AD of a static route is 1.
+- A floating static route needs an AD higher than the primary route.
+- 0.0.0.0 0.0.0.0 is the IPv4 default route and ::/0 is the IPv6 default route.
+- A fully specified route avoids the recursive lookup.
+
+Common questions about static routing:
+Q: What is the administrative distance of a static route?
+A: The default administrative distance of a static route is 1.
+
+Q: How do you configure a default static route?
+A: Use "ip route 0.0.0.0 0.0.0.0" followed by the next-hop address or exit interface.
+
+Q: What is a floating static route?
+A: It is a backup static route configured with a higher administrative distance, so it is used only when the primary route fails.
+
+Q: What is a host route?
+A: A host route is a route to a single IP address with a /32 mask.
+
+Q: Why is my static route not in the routing table?
+A: The next-hop address is probably unreachable or the exit interface is down.

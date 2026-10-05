@@ -1,0 +1,93 @@
+SSH (Secure Shell)
+
+SSH provides secure remote command-line access to routers and switches. It replaces Telnet, which sends usernames, passwords, and commands in clear text. SSH encrypts the whole session, so an attacker capturing packets cannot read the data. SSH uses TCP port 22, while Telnet uses TCP port 23.
+
+SSH versus Telnet:
+- Telnet: TCP 23, no encryption, should not be used on production networks.
+- SSH: TCP 22, encrypted and authenticated, the recommended choice.
+SSH version 2 is more secure than version 1 and should always be used.
+
+SSH versus Telnet comparison details:
+- Security: Telnet sends passwords in clear text that a packet capture can read; SSH encrypts everything.
+- Authentication: SSH checks the server identity with its RSA key; Telnet has no server check.
+- Setup: Telnet needs only a password on the VTY lines; SSH also needs a hostname, domain name, RSA keys, and a local user.
+- Both give the same command-line access once you are logged in.
+
+SSH configuration steps:
+1. Set a hostname other than the default.
+Router(config)# hostname R1
+2. Set a domain name. The hostname and domain name are used to name the RSA key.
+R1(config)# ip domain-name ccna.local
+3. Generate RSA keys. A modulus of at least 768 bits is needed for SSH version 2, and 2048 is recommended.
+R1(config)# crypto key generate rsa modulus 2048
+
+4. Create a local user account.
+R1(config)# username admin secret Cisco123
+5. Enable SSH version 2.
+R1(config)# ip ssh version 2
+6. Configure the VTY lines to use local login and allow only SSH.
+R1(config)# line vty 0 4
+R1(config-line)# login local
+R1(config-line)# transport input ssh
+R1(config-line)# exec-timeout 5 0
+The exec-timeout command disconnects idle sessions after 5 minutes and 0 seconds.
+
+SSH RSA key size requirement:
+SSH version 2 requires an RSA key of at least 768 bits. If the key is smaller, for example the old default of 512 bits, the ip ssh version 2 command is rejected. Generating the RSA key is what actually enables SSH on the device. If no domain name is set, IOS shows the error "Please define a domain-name first" and no key is created. To delete the key, which disables SSH, use crypto key zeroize rsa.
+
+Optional SSH settings:
+R1(config)# ip ssh time-out 60
+R1(config)# ip ssh authentication-retries 3
+These limit how long a login can take and how many failed attempts are allowed.
+
+Restricting SSH sources:
+An access-class applies a standard ACL to the VTY lines so only trusted hosts can connect.
+R1(config)# access-list 10 permit 192.168.1.0 0.0.0.255
+R1(config)# line vty 0 4
+R1(config-line)# access-class 10 in
+
+Verifying SSH:
+- show ip ssh: shows whether SSH is enabled, the version, timeout, and retries.
+- show ssh: lists active SSH sessions to the device.
+- show crypto key mypubkey rsa: displays the generated RSA key.
+
+SSH show ip ssh output explained:
+R1# show ip ssh
+SSH Enabled - version 2.0
+Authentication timeout: 60 secs; Authentication retries: 3
+"SSH Disabled" means no RSA key exists. "version 1.99" means the device accepts both version 1 and version 2; after ip ssh version 2 it shows "version 2.0".
+
+Connecting with SSH:
+From a PC or another Cisco device:
+R2# ssh -l admin 192.168.1.1
+The -l option sets the username. On a PC, a client such as PuTTY or the ssh command can be used, for example ssh admin@192.168.1.1.
+
+Troubleshooting why SSH fails:
+- No RSA key, or the key is too small for version 2: check show ip ssh.
+- No local user: login local needs a username and secret, or the login fails.
+- VTY lines allow only Telnet: use transport input ssh or transport input all.
+- An access-class ACL blocks the client IP address.
+- No IP reachability: test with ping, and check that TCP port 22 is not blocked by an ACL or firewall.
+- No domain name or default hostname, so the key cannot be generated.
+
+CCNA exam tips for SSH:
+- Remember the order: hostname, domain name, RSA key, local user, ip ssh version 2, VTY lines.
+- SSHv2 needs an RSA key of 768 bits or more.
+- transport input ssh blocks Telnet on the VTY lines.
+
+Common questions about SSH:
+
+Q: What port does SSH use?
+A: SSH uses TCP port 22, while Telnet uses TCP port 23.
+
+Q: Why is SSH better than Telnet?
+A: SSH encrypts the session, including passwords, while Telnet sends everything in clear text.
+
+Q: What RSA key size is needed for SSH version 2?
+A: SSH version 2 needs an RSA key of at least 768 bits, and 2048 bits is recommended.
+
+Q: Why is a domain name needed for SSH?
+A: The hostname and domain name are used to name the RSA key, so the key cannot be generated without them.
+
+Q: Which command shows if SSH is enabled?
+A: The show ip ssh command shows whether SSH is enabled and which version is running.

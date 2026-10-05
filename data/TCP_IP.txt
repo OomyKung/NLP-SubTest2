@@ -1,0 +1,96 @@
+TCP/IP Model, TCP and UDP
+
+The TCP/IP model is the protocol suite actually used on the Internet. The TCP/IP model has 4 layers: Application, Transport, Internet, and Network Access (Link). It maps to the OSI model as follows: Application = OSI 5-7, Transport = OSI 4, Internet = OSI 3, Network Access = OSI 1-2.
+
+TCP vs UDP comparison:
+- TCP is connection-oriented, reliable, ordered, and uses acknowledgments, retransmission, flow control, and windowing. Header is 20 bytes or more. Used by HTTP, HTTPS, SSH, FTP, SMTP.
+- UDP is connectionless, best-effort, with no acknowledgments or retransmission. Header is only 8 bytes, so it is faster with less overhead. Used by DNS queries, DHCP, TFTP, SNMP, Syslog, and voice/video.
+
+TCP header fields:
+- Source port (16 bits) and destination port (16 bits).
+- Sequence number (32 bits): the number of the first data byte in this segment.
+- Acknowledgment number (32 bits): the next byte the receiver expects.
+- Data offset (header length, 4 bits): the TCP header is 20 bytes without options and up to 60 bytes with options.
+- Flags (control bits), described below.
+- Window size (16 bits): how many bytes the receiver can accept.
+- Checksum (16 bits): detects errors in the header and data.
+- Urgent pointer (16 bits) and Options (for example MSS).
+
+TCP flags:
+- SYN: synchronize sequence numbers, used to open a connection.
+- ACK: the acknowledgment number field is valid. Set on almost every segment after the first SYN.
+- FIN: the sender has finished sending and wants to close its side.
+- RST: reset, aborts a connection immediately, for example when no service listens on a port.
+- PSH: push the data to the application right away.
+- URG: the urgent pointer field is valid.
+
+UDP header fields:
+The UDP header is 8 bytes with only four fields: source port, destination port, length, and checksum. There is no sequence number, acknowledgment, or window.
+
+TCP 3-way handshake:
+1. The client sends a SYN with its initial sequence number.
+2. The server replies with a SYN-ACK, sending its own sequence number and acknowledging the client.
+3. The client sends an ACK, and the connection is established.
+
+TCP sequence and acknowledgment numbers:
+TCP numbers every byte it sends. The acknowledgment number is the next byte the receiver expects. For example, if a host receives bytes 1-1000, it replies with ACK 1001. Missing data is detected and retransmitted.
+
+TCP windowing:
+The window size tells the sender how many bytes it may send before waiting for an acknowledgment. TCP uses a sliding window that grows when the network is reliable and shrinks when there is congestion, which provides flow control.
+
+TCP 4-way teardown:
+Host A sends FIN, host B replies with ACK, host B sends its own FIN, and host A replies with ACK. Each side closes its direction of the connection separately.
+
+TCP/IP port number ranges:
+- Well-known ports: 0 to 1023, used by servers for common services.
+- Registered ports: 1024 to 49151, assigned to specific applications.
+- Dynamic (ephemeral) ports: 49152 to 65535. A client picks a random ephemeral port as its source port for each new connection.
+For example, a PC browsing a website uses source port 51000 and destination port 443. The server replies from port 443 to port 51000.
+
+TCP/IP sockets:
+A socket is the combination of an IP address, a transport protocol, and a port number, for example 192.168.1.10 TCP 51000. A connection is identified by a pair of sockets (client socket and server socket). Because each connection uses a different ephemeral port, one PC can open many sessions to the same server at the same time.
+
+UDP use cases:
+- Voice and video (RTP): a late packet is useless, so retransmission would only add delay.
+- DNS queries: one small request and one reply; the application simply retries if needed.
+- DHCP, TFTP, SNMP, Syslog, and NTP: simple request/response or one-way messages.
+Applications that need reliability over UDP, such as TFTP, add their own acknowledgments.
+
+TCP/IP well-known ports:
+- 20/21 TCP: FTP (data/control)
+- 22 TCP: SSH
+- 23 TCP: Telnet
+- 25 TCP: SMTP
+- 53 UDP/TCP: DNS
+- 67/68 UDP: DHCP (server/client)
+- 69 UDP: TFTP
+- 80 TCP: HTTP
+- 110 TCP: POP3
+- 123 UDP: NTP
+- 161/162 UDP: SNMP (queries/traps)
+- 443 TCP: HTTPS
+- 514 UDP: Syslog
+
+TCP/IP verification:
+On a Windows PC, "netstat -an" lists active TCP connections and listening ports. On a router, "Router# show control-plane host open-ports" shows ports the router is listening on.
+
+CCNA exam tips for TCP and UDP:
+- TCP header is 20 bytes minimum; UDP header is 8 bytes.
+- Ephemeral ports are 49152 to 65535; well-known ports are 0 to 1023.
+- Know the handshake flags: SYN, SYN-ACK, ACK.
+
+Common questions about TCP and UDP:
+Q: What is the range of ephemeral ports?
+A: Ephemeral (dynamic) ports range from 49152 to 65535.
+
+Q: What is a socket?
+A: A socket is an IP address plus a transport protocol and port number, and a pair of sockets identifies one connection.
+
+Q: Which TCP flag resets a connection?
+A: The RST flag aborts a TCP connection immediately.
+
+Q: Why does voice traffic use UDP?
+A: Voice uses UDP because retransmitted late packets are useless and UDP has lower delay and overhead.
+
+Q: How big is the UDP header?
+A: The UDP header is 8 bytes.

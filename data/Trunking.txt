@@ -1,0 +1,90 @@
+Trunking (802.1Q VLAN Trunks and DTP)
+
+Trunking allows one link between switches, or between a switch and a router, to carry traffic for many VLANs. This document on trunking complements VLAN.txt, which covers VLAN basics and access ports. Cisco switches use the IEEE 802.1Q standard to identify which VLAN each frame belongs to.
+
+Trunking 802.1Q tag:
+802.1Q inserts a 4-byte tag between the source MAC address and the EtherType field. The tag contains:
+- TPID (Tag Protocol Identifier): 16 bits, always 0x8100.
+- PCP (Priority Code Point): 3 bits for QoS priority (CoS).
+- DEI (Drop Eligible Indicator): 1 bit.
+- VLAN ID: 12 bits, allowing VLANs 0 to 4095 (usable 1 to 4094).
+
+Trunking native VLAN:
+Frames in the native VLAN are sent untagged on an 802.1Q trunk. The native VLAN is VLAN 1 by default. If the two ends of a trunk have different native VLANs, traffic leaks between VLANs and CDP reports a native VLAN mismatch error.
+
+Trunk native VLAN mismatch CDP message:
+When one switch uses native VLAN 99 and the neighbor uses native VLAN 1, CDP logs a message like this every minute:
+%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on GigabitEthernet0/1 (99), with Switch2 GigabitEthernet0/1 (1).
+Fix it by setting the same native VLAN on both ends with "switchport trunk native vlan 99". The trunk still comes up, but untagged traffic ends up in the wrong VLAN, and STP may block the port for the inconsistent VLANs.
+
+ISL trunking:
+Inter-Switch Link (ISL) is a legacy Cisco proprietary trunking protocol that encapsulates the whole frame. Modern switches support only 802.1Q.
+
+Trunking DTP modes:
+Dynamic Trunking Protocol (DTP) is a Cisco protocol that negotiates trunking.
+- switchport mode access: never trunks.
+- switchport mode trunk: always trunks and sends DTP frames.
+- switchport mode dynamic desirable: actively tries to form a trunk.
+- switchport mode dynamic auto: forms a trunk only if the other side asks.
+- switchport nonegotiate: turns off DTP on a trunk or access port.
+The default DTP mode on most current Cisco access switches, such as the Catalyst 2960, is dynamic auto.
+
+Trunking DTP resulting mode:
+- auto + auto = access
+- auto + desirable = trunk
+- desirable + desirable = trunk
+- trunk + auto or desirable = trunk
+- trunk + access = misconfigured, avoid
+
+Trunk allowed VLAN list:
+Switch(config)# interface gi0/1
+Switch(config-if)# switchport mode trunk
+Switch(config-if)# switchport trunk allowed vlan 10,20
+Switch(config-if)# switchport trunk allowed vlan add 30
+Switch(config-if)# switchport trunk allowed vlan remove 20
+Switch# show interfaces trunk
+This shows trunk ports, encapsulation, native VLAN, and allowed and active VLANs.
+By default a trunk allows all VLANs 1 to 4094. Using "allowed vlan 10,20" without the add keyword replaces the whole list.
+
+Trunk verification output:
+Sample for a trunk with native VLAN 99 and allowed VLANs 10, 30 and 99:
+Switch# show interfaces trunk
+Port   Mode  Encapsulation  Status    Native vlan
+Gi0/1  on    802.1q         trunking  99
+Port   Vlans allowed on trunk
+Gi0/1  10,30,99
+Port   Vlans allowed and active in management domain
+Gi0/1  10,30,99
+Port   Vlans in spanning tree forwarding state and not pruned
+Gi0/1  10,30,99
+
+Reading the trunk verification output:
+Mode "on" means the port is set with switchport mode trunk; "desirable" or "auto" means DTP formed the trunk. A VLAN appears in the active list only if it exists on the switch. The command "show interfaces gi0/1 switchport" shows the administrative and operational mode and whether DTP negotiation is on.
+
+Troubleshooting trunks:
+- Both sides set to dynamic auto stay access ports. Set at least one side to trunk or desirable.
+- One side set to trunk and the other to access causes a mode mismatch and dropped traffic.
+- On older switches that support ISL, enter "switchport trunk encapsulation dot1q" before "switchport mode trunk", or the command is rejected.
+- A VLAN missing from the allowed list, or not created on the switch, is not carried by the trunk.
+- A native VLAN mismatch produces the CDP NATIVE_VLAN_MISMATCH message.
+- DTP will not negotiate a trunk between switches in different VTP domains.
+
+VLAN hopping on trunks:
+In a double tagging attack, an attacker sends a frame with two 802.1Q tags, the outer one matching the native VLAN, so the next switch forwards it into another VLAN. Mitigate by setting trunks to mode trunk with switchport nonegotiate, setting user ports to access, and using an unused native VLAN.
+
+CCNA exam tips for trunking:
+- The 802.1Q tag is 4 bytes and the VLAN ID field is 12 bits.
+- Only native VLAN frames are untagged on an 802.1Q trunk.
+- Memorize the DTP combinations, especially auto + auto = access.
+
+Common questions about trunking:
+Q: What is a trunk port?
+A: A trunk port carries traffic for multiple VLANs over one link using 802.1Q tags.
+Q: What is the default native VLAN?
+A: The default native VLAN on an 802.1Q trunk is VLAN 1.
+Q: What happens if both ends are dynamic auto?
+A: No trunk forms, and both ports operate as access ports.
+Q: How do you verify a trunk?
+A: Use "show interfaces trunk" to see the mode, encapsulation, native VLAN and allowed VLANs.
+Q: What causes a native VLAN mismatch error?
+A: The two ends of the trunk are configured with different native VLANs, and CDP detects it.

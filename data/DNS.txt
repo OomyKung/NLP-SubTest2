@@ -1,0 +1,94 @@
+DNS (Domain Name System)
+
+DNS translates human-friendly names such as www.cisco.com into IP addresses that devices use to communicate. Without DNS, users would have to remember IP addresses. DNS is a distributed, hierarchical database that uses UDP port 53 for most queries and TCP port 53 for zone transfers and large responses.
+
+DNS hierarchy:
+- Root servers: the top of the tree, shown as a dot (.). They point to TLD servers.
+- TLD servers: top-level domains such as .com, .org, .net, and country codes like .th.
+- Authoritative servers: hold the actual records for a domain such as cisco.com.
+A fully qualified domain name (FQDN) such as www.cisco.com. lists every level, ending at the root.
+
+DNS recursive and iterative queries:
+In a recursive query, the client asks a DNS resolver to return the final answer, and the resolver does all the work. In an iterative query, the server returns the best referral it has, and the asker must query the next server itself. Clients normally send recursive queries to their resolver, and the resolver sends iterative queries to root, TLD, and authoritative servers.
+
+DNS caching and TTL:
+Resolvers and clients cache answers to speed up later lookups. Each record has a TTL (Time To Live) in seconds that says how long it may be cached.
+For example, a TTL of 3600 means the answer may be cached for one hour. A low TTL makes changes spread faster but causes more queries.
+
+DNS record types:
+- A: maps a name to an IPv4 address.
+- AAAA: maps a name to an IPv6 address.
+- CNAME: an alias that points to another name.
+- MX: mail exchanger for a domain.
+- NS: name server for a zone.
+- PTR: reverse lookup, IP address to name.
+- SOA: start of authority, basic information about a zone.
+- TXT: free text, often used for email checks such as SPF.
+
+DNS record examples:
+- www.example.com. A 203.0.113.10
+- www.example.com. AAAA 2001:db8::10
+- ftp.example.com. CNAME www.example.com.
+- example.com. MX 10 mail.example.com. (the 10 is the preference; lower is preferred)
+- example.com. NS ns1.example.com.
+- 10.113.0.203.in-addr.arpa. PTR www.example.com.
+Reverse lookups for IPv4 use the in-addr.arpa domain with the address written backwards. IPv6 uses ip6.arpa.
+
+DNS resolution example:
+1. A PC wants www.example.com and checks its local cache.
+2. The PC sends a recursive query to its configured DNS server.
+3. The resolver asks a root server, which refers it to the .com TLD servers.
+4. The .com server refers it to the authoritative server for example.com.
+5. The authoritative server returns the A record, and the resolver caches it and replies to the PC.
+
+DNS over UDP vs TCP:
+- Normal queries and answers use UDP port 53 because it is fast and needs no handshake.
+- Zone transfers (AXFR and IXFR) between primary and secondary servers use TCP port 53.
+- If an answer is too large for UDP (traditionally over 512 bytes, unless EDNS is used), the server sets the truncated (TC) flag and the client retries over TCP.
+- DNSSEC answers are often large and may need TCP.
+
+DNS on Cisco IOS:
+Router(config)# ip domain-lookup
+Router(config)# ip name-server 8.8.8.8
+Router(config)# ip domain-name ccna.local
+Router(config)# ip dns server
+The ip dns server command lets the router act as a DNS server for clients. In labs, "no ip domain-lookup" stops the router from trying to resolve mistyped commands as hostnames, which avoids long waits.
+A static host entry can be added with "ip host SERVER1 192.168.1.50". The "show hosts" command lists cached and static names.
+
+Testing DNS on a PC:
+C:\> nslookup www.cisco.com
+nslookup shows which DNS server answered and the IP address returned.
+Other useful commands are "ipconfig /all" to see the configured DNS servers and "ipconfig /flushdns" to clear the Windows DNS cache. On Linux, "dig" gives detailed answers.
+
+DNS troubleshooting name resolution:
+1. Ping the destination by IP address. If that works but the name fails, the problem is DNS.
+2. Check the DNS server address with "ipconfig /all" or the DHCP pool dns-server setting.
+3. Ping the DNS server and make sure UDP 53 is not blocked by an ACL or firewall.
+4. Use nslookup to test the name directly against the server.
+5. Flush the cache if an old record is returned.
+On a router, check "ip domain-lookup" and "ip name-server".
+
+CCNA exam tips for DNS:
+- DNS uses UDP 53 for queries and TCP 53 for zone transfers and large replies.
+- A is IPv4, AAAA is IPv6, PTR is reverse lookup, MX is mail.
+- "no ip domain-lookup" stops lookups of mistyped commands.
+- If ping by IP works but ping by name fails, suspect DNS.
+
+Common questions about DNS:
+Q: What port does DNS use?
+A: DNS uses UDP port 53 for most queries and TCP port 53 for zone transfers and large responses.
+
+Q: When does DNS use TCP?
+A: DNS uses TCP for zone transfers and when a response is too large for UDP and is truncated.
+
+Q: What is the difference between an A and an AAAA record?
+A: An A record maps a name to an IPv4 address, and an AAAA record maps a name to an IPv6 address.
+
+Q: What is a PTR record?
+A: A PTR record is used for reverse lookup, mapping an IP address back to a name.
+
+Q: How do I know if a problem is DNS?
+A: If you can ping the host by IP address but not by name, the problem is name resolution.
+
+Q: What does nslookup do?
+A: nslookup queries a DNS server and shows the server that answered and the resolved address.

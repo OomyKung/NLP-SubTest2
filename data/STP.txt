@@ -1,0 +1,85 @@
+STP (Spanning Tree Protocol)
+
+Spanning Tree Protocol, defined in IEEE 802.1D, prevents Layer 2 loops in networks that have redundant switch links. Without STP, a loop causes broadcast storms, MAC address table instability, and duplicate frames, which can bring the whole network down within seconds. STP logically blocks some redundant ports so that only one active path exists between any two devices.
+
+Why Layer 2 loops are bad (the problems STP solves):
+- Broadcast storms: Ethernet frames have no TTL field, so a broadcast circles the loop forever and is copied at every switch until links and CPUs are saturated.
+- MAC address table instability: a switch sees the same source MAC arriving on different ports and keeps rewriting its MAC table (MAC flapping).
+- Duplicate frames: a host receives several copies of the same unicast frame.
+
+STP BPDU (Bridge Protocol Data Unit):
+Switches exchange BPDUs to build the loop-free tree. A BPDU carries the root bridge ID, the root path cost, the sender bridge ID, the sender port ID and the timers. The root bridge sends a configuration BPDU every 2 seconds (the hello time), and the other switches relay it. BPDUs are sent to a multicast MAC address, not flooded as user data.
+
+How STP works:
+1. Elect the root bridge. The switch with the lowest Bridge ID becomes the root bridge. The Bridge ID is made of the bridge priority (default 32768) plus the extended system ID (the VLAN number) and the MAC address. If priorities are equal, the lowest MAC address wins.
+2. Select root ports. Every non-root switch chooses one root port, which is the port with the lowest path cost to the root bridge.
+3. Select designated ports. On each network segment, one port is chosen as the designated port, which forwards traffic toward that segment.
+4. Block the remaining ports. All other ports become alternate (blocking) ports.
+
+STP election tie-breakers in detail:
+- Root bridge: lowest bridge priority, then lowest MAC address. All ports on the root bridge are designated ports.
+- Root port: lowest root path cost, then lowest neighbor bridge ID, then lowest neighbor port ID (port priority, default 128, plus port number).
+- Designated port: on each segment, the port on the switch with the lowest root path cost; if tied, the switch with the lowest bridge ID.
+
+STP default port costs (short method): 10 Mbps = 100, 100 Mbps = 19, 1 Gbps = 4, 10 Gbps = 2.
+The root path cost is the sum of the costs of the ports that receive the BPDU on the way from the root bridge.
+
+STP timers:
+The hello timer is 2 seconds, the forward delay is 15 seconds, and the max age is 20 seconds. Max age is how long a switch keeps the last BPDU before it decides the path to the root has failed. The timers are set on the root bridge.
+
+Port states in classic 802.1D STP:
+Blocking -> Listening -> Learning -> Forwarding. The process can take 30 to 50 seconds to converge.
+- Blocking: receives BPDUs only; may wait up to max age (20 seconds) after an indirect failure.
+- Listening: 15 seconds (forward delay); sends and receives BPDUs, no MAC learning.
+- Learning: 15 seconds (forward delay); learns MAC addresses but does not forward frames.
+- Forwarding: sends and receives data frames.
+- Disabled: the port is administratively shut down.
+That is why convergence takes 30 seconds (15 + 15) or 50 seconds (20 + 15 + 15).
+
+STP variants:
+- PVST+: Cisco default, runs a separate STP instance for each VLAN.
+- RSTP (802.1w): Rapid Spanning Tree, converges in a few seconds. Port roles include root, designated, alternate, and backup.
+- Rapid PVST+: Cisco implementation of RSTP per VLAN.
+- MSTP (802.1s): maps multiple VLANs to a smaller number of spanning tree instances.
+With PVST+, each VLAN can have a different root bridge, so traffic of different VLANs can use different uplinks (load sharing).
+
+STP bridge priority and root bridge configuration:
+The bridge priority must be set in increments of 4096, from 0 to 61440, because the lower 12 bits hold the VLAN number. For VLAN 10 the default shows as 32778 (32768 + 10). The "root primary" macro sets priority 24576, or lower if needed to beat the current root. "root secondary" sets 28672.
+
+STP configuration examples:
+Switch(config)# spanning-tree mode rapid-pvst
+Switch(config)# spanning-tree vlan 1 root primary
+Switch(config)# spanning-tree vlan 10 root primary
+Switch(config)# spanning-tree vlan 10 priority 4096
+
+STP enhancements:
+- PortFast: moves an access port directly to forwarding. Use only on ports connected to end devices.
+- BPDU Guard: shuts down a PortFast port (err-disabled) if it receives a BPDU, protecting against rogue switches.
+- Root Guard: prevents a port from becoming a root port.
+
+STP verification:
+show spanning-tree
+show spanning-tree vlan 10
+Look for "This bridge is the root" on the root, the Root ID and Bridge ID priorities, and each port role (Root, Desg, Altn) and status (FWD, BLK).
+
+STP common mistakes:
+- Leaving default priorities lets the switch with the lowest MAC (often the oldest) become root.
+- PortFast on a switch-to-switch link can create a loop.
+- A port err-disabled by BPDU Guard needs shutdown then no shutdown.
+
+CCNA exam tips for STP:
+- Lowest bridge ID wins; priority first, MAC address second.
+- Know the port costs, timers and 30 to 50 second convergence.
+- PortFast and BPDU Guard belong only on access ports to end devices.
+
+Common questions about STP:
+Q: What is the default STP bridge priority?
+A: The default bridge priority is 32768, plus the VLAN number as the extended system ID.
+Q: What are the STP timers?
+A: Hello time is 2 seconds, forward delay is 15 seconds, and max age is 20 seconds.
+Q: How is the root port chosen?
+A: It is the port with the lowest root path cost, then lowest neighbor bridge ID, then lowest neighbor port ID.
+Q: What is the STP cost of a 1 Gbps link?
+A: The short-method cost of a 1 Gbps link is 4.
+Q: Why must priority be a multiple of 4096?
+A: The low 12 bits of the priority field carry the VLAN ID (extended system ID).

@@ -1,0 +1,85 @@
+MAC Addressing and Switch Forwarding
+
+A MAC address (Media Access Control address) is the 48-bit Layer 2 address burned into every Ethernet and Wi-Fi network interface. Switches use MAC addresses to deliver frames inside a LAN. A MAC address is written as 12 hexadecimal digits, for example 00-1A-2B-3C-4D-5E on Windows or 0011.2233.4455 in Cisco dotted format.
+
+Structure of a MAC address:
+- OUI (Organizationally Unique Identifier): the first 24 bits, assigned by the IEEE to the manufacturer.
+- NIC-specific part: the last 24 bits, assigned by the manufacturer so each interface is unique.
+
+Types of MAC addresses:
+- Unicast: identifies a single interface.
+- Multicast: identifies a group of interfaces. IPv4 multicast MACs begin with 0100.5E.
+- Broadcast: FFFF.FFFF.FFFF, received by every device in the broadcast domain (VLAN).
+
+How a switch learns MAC addresses:
+When a frame arrives, the switch reads the source MAC address and records it in the MAC address table (also called the CAM table) together with the incoming port and VLAN.
+
+How a switch forwards, floods, and filters by MAC address:
+- Forward: if the destination MAC is in the table on a different port, the switch sends the frame only out that port.
+- Filter: if the destination MAC is on the same port the frame arrived on, the switch drops the frame.
+- Flood: if the destination is a broadcast, a multicast, or an unknown unicast (not in the table), the switch sends the frame out every port in the VLAN except the incoming port.
+
+Unknown unicast flooding of MAC addresses:
+When a switch has not yet learned a destination, it floods the frame. When the destination host replies, the switch learns its MAC address and future frames are forwarded only to the correct port.
+
+Switch forwarding methods (MAC switching modes):
+- Store-and-forward: the switch receives the whole frame and checks the FCS before forwarding. Frames with errors are dropped. This is the default on most Cisco Catalyst switches. It has the highest latency but never forwards corrupted frames.
+- Cut-through: the switch starts forwarding as soon as it reads the destination MAC address (the first 6 bytes after the preamble). It has the lowest latency but can forward damaged frames.
+- Fragment-free: the switch waits for the first 64 bytes before forwarding. Most collisions and runts happen in the first 64 bytes, so it filters them out. It is a middle ground between the other two.
+
+MAC address table aging:
+Dynamically learned entries are removed after 300 seconds (5 minutes) of inactivity by default. This keeps the table current when devices move or disconnect.
+Switch(config)# mac address-table aging-time 600
+
+Static MAC address entries:
+A static MAC entry is configured by an administrator. It never ages out and stays in the MAC address table until it is removed. If a static entry exists, the switch will not learn that MAC address dynamically on another port in the same VLAN. Static entries are useful for servers or devices that rarely send traffic.
+
+Static MAC entry example:
+Switch(config)# mac address-table static 0011.2233.4455 vlan 10 interface fa0/5
+To remove it: Switch(config)# no mac address-table static 0011.2233.4455 vlan 10 interface fa0/5
+
+MAC flooding attack:
+The MAC address table has a limited size. In a MAC flooding attack, an attacker sends thousands of frames with random fake source MAC addresses (tools such as macof do this). The table fills up, so the switch cannot learn real addresses and floods normal unicast traffic out all ports in the VLAN. The attacker can then capture traffic meant for other hosts, like on a hub.
+
+Defending against MAC flooding with port security:
+Port security limits how many MAC addresses can be learned on an access port. The default maximum is 1 and the default violation mode is shutdown (the port goes to err-disabled).
+Switch(config-if)# switchport mode access
+Switch(config-if)# switchport port-security
+Switch(config-if)# switchport port-security maximum 2
+Switch(config-if)# switchport port-security violation restrict
+
+MAC address table verification commands:
+- show mac address-table: lists VLAN, MAC address, type (DYNAMIC or STATIC), and port.
+- show mac address-table dynamic interface fa0/1: shows entries learned on one port.
+- show mac address-table aging-time: shows the aging timer.
+- clear mac address-table dynamic: removes all dynamically learned entries.
+
+Sample output of show mac address-table:
+Vlan    Mac Address       Type        Ports
+10      0011.2233.4455    STATIC      Fa0/5
+10      00aa.bbcc.dd01    DYNAMIC     Fa0/1
+Many MAC addresses on one access port can mean a hub, an unmanaged switch, or a MAC flooding attack.
+
+CCNA exam tips for MAC addressing:
+- Switches learn from the source MAC and forward based on the destination MAC.
+- Default MAC aging time is 300 seconds.
+- Store-and-forward checks the FCS; cut-through does not; fragment-free checks the first 64 bytes.
+
+Common questions about MAC addressing:
+Q: How long does a switch keep a dynamic MAC entry?
+A: A dynamic MAC entry is removed after 300 seconds (5 minutes) of inactivity by default.
+
+Q: What is the difference between store-and-forward and cut-through switching?
+A: Store-and-forward receives the whole frame and checks the FCS, while cut-through forwards after reading the destination MAC, giving lower latency.
+
+Q: What is fragment-free switching?
+A: Fragment-free switching forwards a frame after the first 64 bytes are received, which filters out most collision fragments.
+
+Q: What is a MAC flooding attack?
+A: It fills the switch MAC table with fake addresses so the switch floods traffic out all ports, letting the attacker capture it.
+
+Q: How do you prevent MAC flooding?
+A: Enable port security to limit the number of MAC addresses allowed on each access port.
+
+Q: How many bits is a MAC address?
+A: A MAC address is 48 bits, written as 12 hexadecimal digits.

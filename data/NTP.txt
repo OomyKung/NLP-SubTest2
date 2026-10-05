@@ -1,0 +1,95 @@
+NTP (Network Time Protocol)
+
+NTP is a protocol that synchronizes the clocks of routers, switches, servers, and PCs across a network. Each device has its own internal clock, and without NTP these clocks slowly drift apart. NTP uses UDP port 123.
+
+Why accurate time matters for NTP:
+- Log messages and syslog timestamps can be correlated across many devices during troubleshooting.
+- Digital certificates and VPNs check validity dates, so a wrong clock can cause authentication failures.
+- Security investigations depend on knowing exactly when an event happened.
+
+NTP stratum levels:
+NTP uses stratum numbers to describe the distance from an accurate time source. Stratum 0 is a reference clock such as an atomic clock or GPS receiver. Stratum 1 servers are directly connected to a stratum 0 device. Each additional hop adds 1 to the stratum. The maximum usable stratum is 15, and stratum 16 means the device is unsynchronized. A lower stratum is considered more accurate.
+
+NTP modes:
+- Client: gets time from an NTP server but does not provide time to others.
+- Server: provides time to clients. A Cisco router can be both client and server.
+- Symmetric active (peer): two devices synchronize with each other as peers.
+- Broadcast: a server sends time to the whole LAN, and clients listen without sending requests.
+A router that syncs from an upstream server with ntp server automatically serves time to its own clients, at its stratum plus 1. Peers are set with ntp peer.
+
+How NTP clients choose a server:
+1. The client polls each configured server and measures delay, offset, and jitter.
+2. Servers with stratum 16, or whose time disagrees with the others (falsetickers), are rejected.
+3. Among the good servers, a lower stratum and lower delay and jitter are preferred.
+4. The chosen server is the sys.peer, marked with an asterisk.
+The prefer keyword, as in ntp server 192.168.1.1 prefer, makes a server the first choice. Configuring several servers gives redundancy.
+
+NTP client configuration:
+Router(config)# ntp server 192.168.1.1
+Router(config)# ntp source Loopback0
+Router(config)# ntp update-calendar
+The ntp source command uses a stable loopback address for NTP packets, and ntp update-calendar copies NTP time to the hardware calendar.
+
+Router as an NTP master:
+If no external time source exists, a router can act as an authoritative source using its own clock.
+Router(config)# ntp master 3
+This makes the router advertise itself as stratum 3.
+Without a number, ntp master uses stratum 8 by default.
+
+NTP authentication:
+Authentication ensures that clients only accept time from trusted servers.
+Router(config)# ntp authenticate
+Router(config)# ntp authentication-key 1 md5 NtpKey123
+Router(config)# ntp trusted-key 1
+Router(config)# ntp server 192.168.1.1 key 1
+
+NTP time zone configuration:
+Router(config)# clock timezone ICT 7
+NTP always carries time in UTC, and the time zone setting adjusts the local display.
+
+NTP verification commands:
+- show ntp status: shows whether the clock is synchronized, the stratum, and the reference server.
+- show ntp associations: lists NTP servers and peers; an asterisk marks the server currently used.
+- show clock detail: shows the current time and the time source, such as NTP.
+
+NTP verification output explained:
+R1# show ntp associations
+  address        ref clock     st  when  poll  reach  delay  offset  disp
+*~192.168.1.1    10.0.0.1       2    35    64    377    1.2    0.45   0.9
+The * means this is the sys.peer in use, and ~ means it was configured. A + marks a good candidate, - an outlier, and x a falseticker. The st column is the server's stratum. Reach 377 means the last 8 polls all succeeded. Poll is the interval in seconds, between 64 and 1024.
+
+NTP show ntp status output explained:
+R1# show ntp status
+Clock is synchronized, stratum 3, reference is 192.168.1.1
+R1 is stratum 3, one more than its stratum 2 server.
+
+NTP troubleshooting:
+- Clock is unsynchronized: wait, because synchronization can take several minutes.
+- Server unreachable: test with ping and check routing.
+- UDP port 123 blocked by an ACL or firewall.
+- The server shows stratum 16, so it is not synchronized itself and cannot be used.
+- Authentication key number or password mismatch, or a missing ntp trusted-key.
+- Wrong time zone: the time is correct in UTC, but clock timezone is wrong.
+
+CCNA exam tips for NTP:
+- NTP uses UDP 123.
+- Lower stratum is better; stratum 16 means unsynchronized.
+- An asterisk in show ntp associations marks the server in use.
+- ntp master makes a router an authoritative time source.
+
+Common questions about NTP:
+
+Q: What port does NTP use?
+A: NTP uses UDP port 123.
+
+Q: What does stratum 16 mean?
+A: Stratum 16 means the device is not synchronized and cannot be used as a time source.
+
+Q: How does an NTP client choose between several servers?
+A: It rejects bad servers and prefers the one with the lowest stratum and lowest delay and jitter, unless a server is marked with prefer.
+
+Q: How do you verify NTP is working?
+A: Use show ntp status to see if the clock is synchronized and show ntp associations to see the server marked with an asterisk.
+
+Q: What does the ntp master command do?
+A: It makes the router an authoritative NTP source using its own clock, at the stratum given, such as ntp master 3.

@@ -1,0 +1,84 @@
+ARP (Address Resolution Protocol)
+
+ARP is the protocol that maps a known IPv4 address to an unknown MAC address on the local network. A host needs the destination MAC address to build an Ethernet frame. ARP is used only with IPv4; IPv6 uses Neighbor Discovery instead.
+
+How ARP works:
+- ARP request: the sender broadcasts a frame to FFFF.FFFF.FFFF asking "Who has IP address X? Tell me your MAC." Every host in the VLAN receives it.
+- ARP reply: only the host that owns IP address X answers, using a unicast frame sent directly to the requester.
+- The requester stores the result in its ARP cache (ARP table).
+
+ARP packet fields:
+ARP messages are carried directly inside an Ethernet frame with EtherType 0x0806 (there is no IP header).
+- Hardware type: 1 for Ethernet.
+- Protocol type: 0x0800 for IPv4.
+- Hardware address length: 6 (bytes in a MAC address).
+- Protocol address length: 4 (bytes in an IPv4 address).
+- Operation (opcode): 1 = ARP request, 2 = ARP reply.
+- Sender MAC address and sender IP address.
+- Target MAC address and target IP address. In a request, the target MAC is all zeros because it is unknown.
+
+ARP for local vs remote destinations:
+If the destination IP is in the same subnet, the host ARPs for the destination itself. If the destination is on a remote subnet, the host ARPs for the MAC address of its default gateway. The frame is sent to the router's MAC, while the IP header still carries the final destination IP address.
+
+ARP example: PC1 pings PC2 on the same subnet:
+1. PC1 (192.168.1.10) wants to ping PC2 (192.168.1.20) and checks its ARP cache. No entry exists.
+2. PC1 broadcasts an ARP request: "Who has 192.168.1.20?"
+3. The switch floods the broadcast out all ports in the VLAN.
+4. PC2 sends a unicast ARP reply with its MAC address.
+5. PC1 saves the IP-to-MAC mapping in its ARP cache.
+6. PC1 sends the ICMP echo request in a frame addressed to PC2's MAC.
+This is why the first ping from a Cisco router often shows ".!!!!" (success rate 80 percent): the first echo request times out while ARP resolves the address.
+
+Viewing the ARP table:
+- On a Cisco router: Router# show ip arp
+- On a Windows or Linux PC: arp -a
+- Clear entries on a router: Router# clear arp-cache
+The "clear arp-cache" command removes the dynamic ARP entries so the router must learn them again. It is useful after a device is replaced and has a new MAC address. On Windows, "arp -d" deletes cached entries.
+
+ARP table sample output (show ip arp):
+Protocol  Address        Age (min)  Hardware Addr   Type   Interface
+Internet  192.168.1.1          -    0011.2233.4401  ARPA   Gi0/0
+Internet  192.168.1.10        12    00aa.bbcc.dd10  ARPA   Gi0/0
+A dash in the Age column means the address belongs to the router itself. A number shows how many minutes ago the entry was learned.
+
+ARP cache timeout:
+On Cisco IOS the default ARP timeout is 4 hours (14400 seconds). Windows PCs keep entries for a much shorter time, usually less than a few minutes. The timeout can be changed per interface:
+Router(config-if)# arp timeout 1200
+You can also create a static ARP entry: Router(config)# arp 192.168.1.50 0011.2233.4455 arpa
+
+Gratuitous ARP:
+A gratuitous ARP is an unsolicited ARP reply a host sends about its own IP address. It makes other devices update their caches and helps detect duplicate IP addresses. HSRP uses it during failover.
+
+Proxy ARP:
+With proxy ARP, a router answers an ARP request on behalf of a host in another network by replying with its own MAC address. It is enabled by default on Cisco router interfaces and can be disabled with "Router(config-if)# no ip proxy-arp".
+
+ARP security:
+ARP has no authentication, so an attacker can send fake ARP replies (ARP spoofing or ARP poisoning) to become a man-in-the-middle. Cisco switches defend against this with Dynamic ARP Inspection (DAI), which checks ARP messages against the DHCP snooping binding table.
+Switch(config)# ip arp inspection vlan 10
+
+ARP vs IPv6 Neighbor Discovery (NDP):
+- ARP is for IPv4 and uses broadcast requests. IPv6 has no broadcast, so it uses NDP, which runs over ICMPv6.
+- NDP sends a Neighbor Solicitation (NS, ICMPv6 type 135) to a solicited-node multicast address and gets a Neighbor Advertisement (NA, type 136).
+- NDP also finds routers with Router Solicitation (RS, type 133) and Router Advertisement (RA, type 134).
+- On a Cisco router, "show ipv6 neighbors" shows the IPv6 equivalent of the ARP table.
+
+CCNA exam tips for ARP:
+- The ARP request is a broadcast; the ARP reply is a unicast.
+- For a remote destination, the host ARPs for the default gateway, not the remote host.
+- Default Cisco IOS ARP timeout is 4 hours.
+
+Common questions about ARP:
+Q: What is the default ARP timeout on a Cisco router?
+A: The default ARP timeout on Cisco IOS is 4 hours (14400 seconds).
+
+Q: How do you clear the ARP table on a Cisco router?
+A: Use the privileged EXEC command "clear arp-cache".
+
+Q: What is the destination MAC of an ARP request?
+A: An ARP request is sent to the broadcast MAC address FFFF.FFFF.FFFF.
+
+Q: What does IPv6 use instead of ARP?
+A: IPv6 uses Neighbor Discovery Protocol with Neighbor Solicitation and Neighbor Advertisement messages.
+
+Q: Why does the first ping sometimes fail?
+A: The first echo request is often dropped while the sender is still waiting for the ARP reply.

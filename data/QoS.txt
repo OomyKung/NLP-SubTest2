@@ -1,0 +1,91 @@
+QoS (Quality of Service)
+
+QoS is a set of tools that manage how bandwidth is shared between traffic types. In converged networks, voice, video, and data share the same links. Without QoS, a large file transfer could delay voice packets.
+
+QoS traffic characteristics:
+- Bandwidth: the capacity of a link, in bits per second.
+- Delay (latency): the time a packet takes to reach its destination.
+- Jitter: the variation in delay between packets.
+- Loss: the percentage of packets that are dropped.
+
+QoS voice recommendations:
+Voice traffic is sensitive to delay and loss. Recommended values are one-way delay of 150 ms or less, jitter of 30 ms or less, and packet loss of 1 percent or less.
+
+QoS models:
+- Best effort: no QoS at all. Every packet is treated the same. This is the default.
+- IntServ (Integrated Services): an application reserves bandwidth end to end with RSVP before sending. It gives guarantees but does not scale well.
+- DiffServ (Differentiated Services): packets are classified and marked, and each router treats each class per hop. DiffServ scales well and is the most common model.
+
+QoS classification and marking:
+Classification identifies traffic, and marking writes a value into the header so other devices can treat it consistently.
+- CoS (Class of Service): 3 bits in the 802.1Q tag (802.1p) at Layer 2, values 0 to 7. Voice usually uses CoS 5.
+- DSCP (Differentiated Services Code Point): 6 bits in the IP header at Layer 3, values 0 to 63.
+- EF (Expedited Forwarding): DSCP 46, used for voice.
+- AF (Assured Forwarding): classes AF11 to AF43, where the first digit is the class and the second is the drop probability.
+- CS (Class Selector): CS0 to CS7, backward compatible with IP Precedence.
+
+QoS AF and CS DSCP values:
+The AF decimal value is 8 times the class plus 2 times the drop probability. A higher drop number means the packet is dropped first.
+- AF11 = 10, AF12 = 12, AF13 = 14.
+- AF21 = 18, AF22 = 20, AF23 = 22.
+- AF31 = 26, AF32 = 28, AF33 = 30.
+- AF41 = 34, AF42 = 36, AF43 = 38.
+The CS value is 8 times the class number: CS0 = 0, CS1 = 8, CS2 = 16, CS3 = 24, CS4 = 32, CS5 = 40, CS6 = 48, CS7 = 56. CS3 is often used for call signaling and CS6 for network control such as routing protocols.
+DSCP uses the top 6 bits of the ToS byte; the last 2 bits are used for ECN.
+
+QoS trust boundaries:
+A trust boundary is the point where markings are accepted. Cisco IP phones are often trusted, extending the boundary to the phone, while markings from the PC behind it are not trusted.
+
+QoS marking at the access layer:
+Best practice is to classify and mark traffic as close to the source as possible, at the access layer switch or the IP phone. Devices further in the network then trust the markings and only queue based on them, instead of classifying again on every hop.
+
+QoS queuing:
+- FIFO: first in, first out, with no prioritization.
+- CBWFQ (Class-Based Weighted Fair Queuing): guarantees bandwidth to each class.
+- LLQ (Low Latency Queuing): adds a strict priority queue to CBWFQ, used for voice.
+
+QoS congestion avoidance:
+Tail drop discards new packets when a queue is full, causing TCP global synchronization. WRED (Weighted Random Early Detection) randomly drops lower-priority packets before the queue fills.
+
+QoS policing vs shaping:
+Policing drops or re-marks traffic that exceeds a rate. Shaping buffers excess traffic and sends it later, adding delay but avoiding drops.
+- Policing can be applied inbound or outbound; shaping is applied outbound only.
+- Policing adds no delay; shaping adds delay because it queues packets.
+- Policing is used by service providers to enforce a contract rate (CIR).
+- Shaping is used by customers to slow traffic down to the provider rate so it is not policed.
+
+QoS MQC example:
+Router(config)# class-map match-any VOICE
+Router(config-cmap)# match dscp ef
+Router(config)# policy-map WAN-QOS
+Router(config-pmap)# class VOICE
+Router(config-pmap-c)# priority percent 30
+Router(config)# interface g0/0
+Router(config-if)# service-policy output WAN-QOS
+Verify with show policy-map interface g0/0 and check that packets match the VOICE class.
+
+QoS troubleshooting tips:
+- Policy has no effect: check that service-policy is applied in the correct direction.
+- Voice is choppy: confirm voice is marked EF and placed in the priority (LLQ) queue.
+- Markings lost: check the trust boundary on the access switch.
+
+CCNA exam tips for QoS:
+- EF is DSCP 46 for voice; AF41 is 34 and CS values are multiples of 8.
+- LLQ is the queuing method for voice; WRED avoids TCP global synchronization.
+- Policing drops, shaping delays.
+
+Common questions about QoS:
+Q: What is the DSCP value of AF31?
+A: AF31 has a DSCP decimal value of 26.
+
+Q: Which QoS model is most common?
+A: DiffServ is the most common QoS model because it scales well.
+
+Q: What is the difference between policing and shaping?
+A: Policing drops or re-marks excess traffic, while shaping buffers it and sends it later.
+
+Q: What is the maximum one-way delay for voice?
+A: The recommended one-way delay for voice is 150 ms or less.
+
+Q: Where should traffic be marked?
+A: Traffic should be marked as close to the source as possible, at the access layer.

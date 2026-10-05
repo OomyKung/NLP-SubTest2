@@ -1,0 +1,88 @@
+IP Routing (How Routers Forward Packets)
+
+IP routing is the process a router uses to move a packet from one network to another. A router reads the destination IP address of each packet, looks it up in its routing table, and sends the packet out the best interface toward the next hop. Routers work at Layer 3 of the OSI model.
+
+IP routing packet forwarding steps:
+1. The router receives a frame and checks the FCS. If the frame is damaged, it is dropped.
+2. The router removes the Layer 2 header and reads the destination IP address.
+3. The router finds the most specific matching route in the routing table (longest prefix match).
+4. The router decrements the TTL by 1 and recalculates the header checksum. If TTL reaches 0, the packet is dropped.
+5. The router builds a new Layer 2 frame for the outgoing interface, using ARP to learn the next-hop MAC address, and sends it.
+
+IP routing table codes:
+- C: connected, a network on a directly connected, up/up interface.
+- L: local, the router's own interface address as a /32 host route.
+- S: static, a route configured manually.
+- O: OSPF. D: EIGRP. R: RIP.
+- *: candidate default route.
+Example line: O 10.2.2.0/24 [110/2] via 10.1.1.2, 00:05:11, GigabitEthernet0/0. The values in brackets are [administrative distance/metric]. "via" shows the next-hop address, followed by the route age and the exit interface.
+
+IP routing gateway of last resort:
+The line "Gateway of last resort is 10.1.1.1 to network 0.0.0.0" means a default route exists. Packets that match no other route are sent there. If it says "Gateway of last resort is not set", packets with no matching route are dropped.
+
+IP routing administrative distance (AD) list:
+- Connected interface: 0
+- Static route: 1
+- eBGP: 20
+- EIGRP internal: 90
+- OSPF: 110
+- IS-IS: 115
+- RIP: 120
+- EIGRP external: 170
+- iBGP: 200
+- Unknown or unreachable: 255 (never used)
+
+IP routing metric vs administrative distance:
+- Administrative distance compares routes to the same prefix learned from different sources. Lower AD is more trusted.
+- Metric compares routes to the same prefix learned from the same routing protocol. Lower metric is better.
+- OSPF uses cost, EIGRP uses a composite metric based on bandwidth and delay, and RIP uses hop count.
+- Prefix length is checked first, then AD, then metric.
+
+IP routing longest prefix match example:
+A router has three routes: 10.1.1.0/24, 10.1.0.0/16, and 0.0.0.0/0. A packet arrives for destination 10.1.1.5. All three routes match this address. The router picks 10.1.1.0/24 because it has the longest prefix (24 matching bits). If the destination were 10.1.2.5, only 10.1.0.0/16 and 0.0.0.0/0 match, so the /16 is used. For 8.8.8.8, only the default route 0.0.0.0/0 matches.
+
+IP routing route sources:
+- Connected routes are added automatically when an interface has an IP address and is up/up.
+- Local routes are /32 host routes for each interface IP address of the router itself.
+- Static routes are typed by an administrator and do not adapt to changes.
+- Dynamic routes are learned from routing protocols such as OSPF and EIGRP and adapt automatically.
+
+IP routing dynamic protocol categories:
+- IGP (Interior Gateway Protocol) routes inside one autonomous system. Examples: OSPF, EIGRP, RIP.
+- EGP (Exterior Gateway Protocol) routes between autonomous systems. BGP is the EGP used on the internet.
+- Distance vector protocols, such as RIP, learn routes from neighbors and know only distance and direction. EIGRP is an advanced distance vector protocol.
+- Link state protocols, such as OSPF, flood link information so every router builds a full map and runs the SPF algorithm.
+
+IP routing ECMP (Equal-Cost Multi-Path):
+When a routing protocol learns two or more paths to the same prefix with the same AD and the same metric, it installs all of them and load balances traffic. OSPF and EIGRP install up to 4 equal-cost paths by default, which can be changed with the maximum-paths command.
+
+IP routing verification commands:
+Router# show ip route
+Router# show ip route 10.1.1.5
+Router# show ip interface brief
+The command "show ip route 10.1.1.5" shows which route the router will actually use for that destination.
+
+CCNA exam tips for IP routing:
+- Always apply longest prefix match first, then AD, then metric.
+- Memorize the AD values for connected, static, EIGRP, OSPF, and RIP.
+- Know how to read [AD/metric] and the "via" next hop in a routing table line.
+- Remember that the L code is a /32 local route, not a network.
+
+Common questions about IP routing:
+Q: What does [110/2] mean in a routing table?
+A: 110 is the administrative distance, which shows the route came from OSPF, and 2 is the OSPF cost metric.
+
+Q: Which route is used if several routes match the destination?
+A: The router uses the route with the longest prefix length, which is the most specific match.
+
+Q: What is the difference between AD and metric?
+A: AD chooses between different route sources, while metric chooses between paths from the same routing protocol.
+
+Q: What happens if no route matches and there is no default route?
+A: The router drops the packet and may send an ICMP destination unreachable message back to the source.
+
+Q: What is a local route?
+A: A local route, shown with code L, is a /32 host route for the router's own interface IP address.
+
+Q: What is the gateway of last resort?
+A: It is the next hop of the default route 0.0.0.0/0, used when no more specific route matches.

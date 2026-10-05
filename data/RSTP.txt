@@ -1,0 +1,89 @@
+RSTP (Rapid Spanning Tree Protocol)
+
+RSTP is defined in IEEE 802.1w and is an improved version of the original 802.1D Spanning Tree Protocol (STP). Like STP, RSTP prevents Layer 2 loops by blocking redundant paths, but it converges much faster. Classic STP relies on timers and can take 30 to 50 seconds to converge, while RSTP usually converges in a few seconds or less.
+
+Why RSTP is faster:
+- Switches use a proposal and agreement handshake instead of waiting for timers.
+- Alternate and backup ports are pre-calculated, so they can take over immediately.
+- Edge ports go straight to forwarding.
+- Every RSTP switch sends its own BPDUs every 2 seconds (hello time). A neighbor is considered lost after 3 missed hellos (6 seconds), instead of waiting for the 20-second max age.
+
+RSTP port states:
+STP has five states: disabled, blocking, listening, learning, and forwarding. RSTP has three states:
+- Discarding: replaces disabled, blocking, and listening. No frames forwarded.
+- Learning: builds the MAC table but does not forward frames.
+- Forwarding: sends and receives frames.
+
+RSTP port roles:
+- Root port: best path toward the root bridge on a non-root switch.
+- Designated port: forwarding port on each segment.
+- Alternate port: a backup path to the root bridge through another switch, in discarding state.
+- Backup port: a backup for a designated port on the same shared segment.
+- Disabled port: administratively down.
+
+RSTP link types:
+- Point-to-point: full-duplex link between two switches, can use rapid transition.
+- Shared: half-duplex link, such as one to a hub, uses slower STP behavior.
+- Edge: port connected to an end device, similar to PortFast.
+
+RSTP proposal and agreement:
+When a link comes up, the designated switch sends a proposal BPDU. The neighbor puts its other non-edge ports into discarding (sync), then replies with an agreement, and the port moves to forwarding right away.
+
+RSTP topology change handling:
+1. In RSTP, a topology change happens only when a non-edge port moves to the forwarding state. Edge ports going up or down do not cause a topology change.
+2. The switch that detects the change floods BPDUs with the TC (topology change) flag set out its root port and non-edge designated ports.
+3. Each switch that receives the TC flushes the MAC addresses learned on its other ports and relays the TC.
+
+RSTP vs 802.1D topology change: in classic 802.1D, the switch must first send a TCN BPDU up to the root bridge, and the root then tells all switches to age out MAC entries using the 15-second forward delay. The RSTP method is faster and does not depend on the root bridge.
+
+STP vs RSTP vs PVST+ vs Rapid PVST+ comparison:
+- STP (802.1D): IEEE standard, one spanning tree for all VLANs, slow convergence of 30 to 50 seconds, low CPU use.
+- PVST+: Cisco proprietary, one 802.1D instance per VLAN, slow convergence, allows a different root bridge per VLAN for load sharing.
+- RSTP (802.1w): IEEE standard, one spanning tree for all VLANs, fast convergence.
+- Rapid PVST+: Cisco proprietary, one RSTP instance per VLAN, fast convergence and per-VLAN load sharing, but uses the most CPU and memory.
+
+MSTP and RSTP compatibility:
+- MSTP (802.1s): IEEE standard, maps groups of VLANs to a few RSTP instances, fast and efficient.
+RSTP is backward compatible with 802.1D; a port that hears an 802.1D BPDU falls back to classic STP behavior.
+
+Rapid PVST+ (RSTP) configuration:
+Rapid PVST+ is the Cisco implementation of RSTP, with a separate RSTP instance for each VLAN.
+Switch(config)# spanning-tree mode rapid-pvst
+Switch(config)# interface fa0/1
+Switch(config-if)# spanning-tree portfast
+Switch(config-if)# spanning-tree bpduguard enable
+PortFast makes an access port forward immediately. BPDU Guard puts the port into err-disabled state if a BPDU is received, protecting against rogue switches.
+
+RSTP verification:
+Switch# show spanning-tree
+Switch# show spanning-tree vlan 10
+These show the root bridge, port roles, port states, and the protocol "rstp".
+Sample output lines:
+Spanning tree enabled protocol rstp
+Interface  Role Sts Cost Prio.Nbr Type
+Gi0/1      Root FWD 4    128.25   P2p
+Gi0/2      Altn BLK 4    128.26   P2p
+Fa0/1      Desg FWD 19   128.1    P2p Edge
+Cisco output shows the discarding state as BLK. "Edge" marks a PortFast port.
+
+RSTP troubleshooting:
+- If "show spanning-tree" shows protocol "ieee", the switch is still running PVST+; use "spanning-tree mode rapid-pvst".
+- A link that is half duplex is treated as shared and converges slowly; fix duplex.
+- A port connected to a legacy 802.1D switch also converges slowly.
+
+CCNA exam tips for RSTP:
+- RSTP has 3 states (discarding, learning, forwarding); STP has 5.
+- Alternate port = backup root port; backup port = backup designated port on a shared segment.
+- Rapid PVST+ is the Cisco per-VLAN version of RSTP.
+
+Common questions about RSTP:
+Q: What IEEE standard defines RSTP?
+A: RSTP is defined in IEEE 802.1w.
+Q: What are the RSTP port states?
+A: The RSTP port states are discarding, learning, and forwarding.
+Q: What is an alternate port in RSTP?
+A: An alternate port is a discarding port that offers a backup path to the root bridge.
+Q: How fast does RSTP converge?
+A: RSTP usually converges in a few seconds or less, compared with 30 to 50 seconds for STP.
+Q: How do you enable Rapid PVST+?
+A: Use the global command "spanning-tree mode rapid-pvst".

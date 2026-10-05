@@ -1,0 +1,88 @@
+DHCP (Dynamic Host Configuration Protocol)
+
+DHCP automatically assigns IP configuration to hosts, including the IP address, subnet mask, default gateway, DNS server, and lease time. This removes the need to configure every device manually and prevents duplicate address mistakes. DHCPv4 uses UDP port 67 for the server and UDP port 68 for the client.
+
+DHCP DORA process:
+1. Discover: the client broadcasts a DHCPDISCOVER message to find a DHCP server.
+2. Offer: the server replies with a DHCPOFFER containing an available IP address.
+3. Request: the client broadcasts a DHCPREQUEST to accept the offer.
+4. Acknowledge: the server sends a DHCPACK to confirm the lease.
+When half of the lease time has passed, the client tries to renew the lease directly with the server.
+
+DHCP DORA broadcast and unicast details:
+The Discover is sent from source IP 0.0.0.0 to destination 255.255.255.255, because the client has no address yet. The Offer and Ack may be broadcast or unicast, depending on the client's broadcast flag. The Request is broadcast so that every server that made an offer learns which offer was accepted. Lease renewal at 50 percent of the lease is a unicast DHCPREQUEST to the server.
+
+DHCP lease:
+A lease is the time a client may use an address. If renewal at 50 percent fails, the client tries again with a broadcast at about 87.5 percent (rebinding). If the lease expires, the client must stop using the address. On Cisco IOS the default lease is 1 day. "lease 7" sets 7 days, and "lease 0 8" sets 8 hours. A client gives up its address with DHCPRELEASE.
+
+Configuring a Cisco router as a DHCP server:
+Router(config)# ip dhcp excluded-address 192.168.10.1 192.168.10.10
+Router(config)# ip dhcp pool LAN10
+Router(dhcp-config)# network 192.168.10.0 255.255.255.0
+Router(dhcp-config)# default-router 192.168.10.1
+Router(dhcp-config)# dns-server 8.8.8.8
+Router(dhcp-config)# lease 7
+
+DHCP excluded addresses:
+The excluded-address command reserves addresses, such as gateways and servers, so they are never handed out.
+In the example, 192.168.10.1 through 192.168.10.10 are excluded, so the first client gets 192.168.10.11. Exclusions are configured in global configuration mode, not inside the pool.
+
+DHCP Relay:
+DHCP Discover messages are broadcasts, and routers do not forward broadcasts. If the DHCP server is on a different subnet from the clients, the router interface facing the clients must be configured as a DHCP relay agent. The relay agent receives the client broadcast and forwards it as a unicast packet to the DHCP server address. The server then uses the relay interface address (the giaddr field) to choose the correct pool for that subnet.
+
+Router(config)# interface g0/0
+Router(config-if)# ip helper-address 10.1.1.100
+
+The "ip helper-address" command is configured on the interface that receives the client broadcasts, not on the interface facing the server. By default it also forwards some other UDP broadcasts such as DNS and TFTP.
+
+DHCP client on a router interface:
+Router(config-if)# ip address dhcp
+A router can get its own address by DHCP, which is common on the interface facing an ISP. The router also installs a default route toward the gateway it learns. Check it with "show ip interface brief", where the Method column shows DHCP.
+
+DHCP snooping:
+DHCP Snooping is a switch security feature that blocks DHCP server messages from untrusted ports to stop rogue DHCP servers.
+All ports are untrusted by default. Ports toward the real DHCP server or uplinks are set as trusted. On untrusted ports, server messages such as Offer and Ack are dropped. Snooping builds a binding table (MAC, IP, VLAN, port) used by Dynamic ARP Inspection.
+Switch(config)# ip dhcp snooping
+Switch(config)# ip dhcp snooping vlan 10
+Switch(config)# interface g0/24
+Switch(config-if)# ip dhcp snooping trust
+
+DHCP verification and troubleshooting:
+- show ip dhcp binding: shows assigned addresses.
+- show ip dhcp pool
+- show ip dhcp conflict
+- debug ip dhcp server events
+Common problems include a missing helper-address, a wrong default-router, an exhausted pool, or the client port in the wrong VLAN.
+
+Router# show ip dhcp binding
+IP address       Client-ID/Hardware address  Lease expiration      Type
+192.168.10.11    0100.5079.6668.00           Oct 12 2026 09:15 AM  Automatic
+Each line shows the leased IP, the client MAC, when the lease ends, and whether the binding is Automatic or Manual.
+
+DHCP troubleshooting tips:
+- A client with a 169.254.x.x address (APIPA) got no DHCP reply.
+- If the helper-address is on the wrong interface, remote clients get nothing.
+- Forgotten exclusions can cause conflicts with static addresses.
+- With snooping on, an untrusted uplink drops the server replies.
+
+CCNA exam tips for DHCP:
+- DORA is Discover, Offer, Request, Acknowledgment.
+- Server uses UDP 67, client uses UDP 68.
+- ip helper-address goes on the client-facing interface.
+- DHCP snooping ports are untrusted by default.
+
+Common questions about DHCP:
+Q: What are the four steps of DHCP?
+A: Discover, Offer, Request, and Acknowledgment, known as DORA.
+
+Q: Which ports does DHCP use?
+A: The DHCP server uses UDP port 67 and the client uses UDP port 68.
+
+Q: Why is a DHCP relay agent needed?
+A: Routers do not forward broadcasts, so a relay agent forwards client broadcasts as unicasts to a server on another subnet.
+
+Q: What does DHCP snooping do?
+A: It drops DHCP server messages on untrusted ports to block rogue DHCP servers.
+
+Q: How do you see which addresses a Cisco DHCP server has leased?
+A: Use the "show ip dhcp binding" command.

@@ -1,0 +1,85 @@
+Inter-VLAN Routing
+
+Devices in different VLANs are in separate broadcast domains and separate IP subnets, so they cannot communicate directly at Layer 2. Inter-VLAN routing uses a Layer 3 device to forward traffic between VLANs. CCNA covers three methods: legacy inter-VLAN routing, router-on-a-stick (ROAS), and Layer 3 switching with SVIs.
+
+1. Legacy Inter-VLAN Routing:
+Each VLAN is connected to a separate physical router interface. The switch port connected to each router interface is an access port in the matching VLAN. This method is simple but does not scale, because a router has a limited number of physical interfaces.
+
+2. Router-on-a-Stick Inter-VLAN Routing:
+A single physical router interface is connected to a switch trunk port. The router interface is divided into logical subinterfaces, one per VLAN. Each subinterface uses 802.1Q encapsulation and has an IP address that acts as the default gateway for that VLAN.
+
+Router-on-a-stick configuration example (one subinterface per VLAN):
+Router(config)# interface g0/0.10
+Router(config-subif)# encapsulation dot1q 10
+Router(config-subif)# ip address 192.168.10.1 255.255.255.0
+Router(config)# interface g0/0.20
+Router(config-subif)# encapsulation dot1q 20
+Router(config-subif)# ip address 192.168.20.1 255.255.255.0
+Router(config)# interface g0/0
+Router(config-if)# no shutdown
+
+For the native VLAN, use "encapsulation dot1q 99 native". Router-on-a-stick is cheap, but all inter-VLAN traffic shares one physical link, which can become a bottleneck.
+
+Inter-VLAN routing: the switch port facing the router must be a trunk:
+Switch(config)# interface gi0/1
+Switch(config-if)# switchport mode trunk
+
+3. Layer 3 Switch with SVIs for Inter-VLAN Routing:
+A multilayer switch routes between VLANs internally using Switched Virtual Interfaces (SVIs). An SVI is a virtual VLAN interface with an IP address. This is the most scalable and fastest method because routing is done in hardware.
+
+Switch(config)# ip routing
+Switch(config)# interface vlan 10
+Switch(config-if)# ip address 192.168.10.1 255.255.255.0
+Switch(config-if)# no shutdown
+
+A Layer 3 switch port can also be converted into a routed port with the "no switchport" command, which is useful for links to a router.
+
+Comparison of the three inter-VLAN routing methods:
+- Legacy: one physical router interface and one access link per VLAN. Easy to understand, but uses many ports and cables and does not scale.
+- Router-on-a-stick: one physical link with 802.1Q subinterfaces. Cheap and needs only one router port, but all routed traffic shares one link and the router does the routing in software.
+- Layer 3 switch with SVIs: no external router needed, routing is done in hardware at wire speed, and it scales to many VLANs. It requires a more expensive multilayer switch and the "ip routing" command.
+- Modern campus networks normally use Layer 3 switches; router-on-a-stick suits small sites.
+
+SVI up/up conditions for inter-VLAN routing:
+An SVI shows status up and protocol up only when all of these are true:
+1. The VLAN exists in the switch VLAN database and is active.
+2. The SVI is not administratively down. Use "no shutdown" on the interface vlan.
+3. At least one Layer 2 port in that VLAN is up/up and in the STP forwarding state. This can be an access port in the VLAN or a trunk port that allows and forwards the VLAN.
+If the VLAN does not exist, the SVI stays down/down. If no port in the VLAN is up, the SVI is up/down. Interface VLAN 1 exists by default but is shut down. The "ip routing" command is required to route between SVIs.
+
+Inter-VLAN routing verification output:
+Router# show ip interface brief
+Interface              IP-Address    OK? Method Status Protocol
+GigabitEthernet0/0     unassigned    YES unset  up     up
+GigabitEthernet0/0.10  192.168.10.1  YES manual up     up
+GigabitEthernet0/0.20  192.168.20.1  YES manual up     up
+Router# show ip route
+C 192.168.10.0/24 is directly connected, GigabitEthernet0/0.10
+L 192.168.10.1/32 is directly connected, GigabitEthernet0/0.10
+Each VLAN subnet should appear as a connected (C) route. On a Layer 3 switch, "show ip interface brief" lists Vlan10 and Vlan20 with status up and protocol up.
+
+Inter-VLAN routing troubleshooting tips:
+- Check that the VLAN exists and is allowed on the trunk.
+- Verify the correct VLAN ID is used in the encapsulation command.
+- Confirm hosts use the correct default gateway.
+- An SVI is only up/up when the VLAN exists and at least one port in that VLAN is active.
+- Use "show ip interface brief", "show ip route", and "show interfaces trunk".
+- On a Layer 3 switch, forgetting "ip routing" means SVIs are up but traffic is not routed between VLANs.
+- In router-on-a-stick, the physical interface must be up with "no shutdown", or all subinterfaces stay down.
+
+CCNA exam tips for inter-VLAN routing:
+- Each subinterface or SVI IP address is the default gateway for hosts in that VLAN.
+- The switch port toward a router-on-a-stick router must be a trunk.
+- Know the three SVI up/up conditions.
+
+Common questions about inter-VLAN routing:
+Q: What is router-on-a-stick?
+A: Router-on-a-stick routes between VLANs on one physical router interface split into 802.1Q subinterfaces.
+Q: What is an SVI?
+A: An SVI is a virtual interface for a VLAN on a switch, with an IP address used for routing or management.
+Q: Why is my SVI down?
+A: The VLAN may not exist, the SVI may be shut down, or no port in that VLAN is up and forwarding.
+Q: Which inter-VLAN routing method is the fastest?
+A: A Layer 3 switch with SVIs is the fastest because it routes in hardware.
+Q: Which command enables routing on a Layer 3 switch?
+A: The "ip routing" global configuration command enables routing between SVIs.

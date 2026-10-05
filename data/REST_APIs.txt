@@ -1,0 +1,110 @@
+REST APIs (Representational State Transfer)
+
+A REST API is an application programming interface that uses HTTP to let software read and change data on another system. Controllers such as Cisco DNA Center (Catalyst Center) expose REST APIs so scripts can manage the network without the CLI.
+
+REST API principles:
+- Client-server: the client and server are separate and communicate through requests.
+- Stateless: each request contains all information needed; the server keeps no session state.
+- Cacheable: responses state whether they can be cached.
+- Uniform interface: resources are identified by URIs and handled with standard methods.
+
+REST API HTTP methods and CRUD:
+- POST: Create a new resource.
+- GET: Read or retrieve a resource.
+- PUT: Update by replacing a resource; PATCH: partially update it.
+- DELETE: Delete a resource.
+CRUD stands for Create, Read, Update, and Delete. Create maps to POST, Read to GET, Update to PUT or PATCH, and Delete to DELETE.
+
+REST API request anatomy:
+A REST request has four parts:
+1. Method: the action, such as GET or POST.
+2. URI: the resource the request acts on.
+3. Headers: extra information, such as the data format and the token.
+4. Body: the data sent to the server, usually JSON. GET requests normally have no body.
+
+REST API response anatomy:
+A REST response has three parts: a status code (such as 200 OK), headers (such as Content-Type: application/json), and a body that holds the returned data, usually JSON.
+
+REST API URI structure:
+https://dnac.example.com/dna/intent/api/v1/network-device
+Here https is the scheme, dnac.example.com is the server, and /dna/intent/api/v1/network-device is the path to the resource. Query parameters may follow a question mark.
+
+REST API query parameters:
+Query parameters filter or limit the result. They start after a question mark, use key=value pairs, and are joined with an ampersand. Example:
+https://dnac.example.com/dna/intent/api/v1/network-device?hostname=R1&limit=5
+Here hostname=R1 and limit=5 are the query parameters, so only the device named R1 is returned, with at most 5 results.
+
+REST API common headers:
+- Content-Type: the format of the request body, such as application/json.
+- Accept: the format the client wants back.
+- Authorization or X-Auth-Token: carries credentials or a token.
+
+REST API HTTP response codes:
+- 200 OK: the request succeeded.
+- 201 Created: a new resource was created.
+- 202 Accepted: the request was accepted and will be processed later.
+- 204 No Content: success with no body returned.
+
+REST API error response codes:
+- 400 Bad Request: invalid syntax or data.
+- 401 Unauthorized: authentication is missing or failed.
+- 403 Forbidden: authenticated but not allowed.
+- 404 Not Found: the resource does not exist.
+- 405 Method Not Allowed: the method is not supported for this resource.
+- 429 Too Many Requests: the client sent too many requests (rate limiting).
+- 500 Internal Server Error: the server failed.
+- 503 Service Unavailable: the server is overloaded or down for maintenance.
+Codes in the 2xx range mean success, 4xx mean a client error, and 5xx mean a server error.
+
+REST API authentication types:
+- Basic authentication: a Base64 username and password in each request.
+- Token: the client gets a token, then sends it in later requests.
+- API key: a static key in a header or URL.
+
+REST API token authentication flow with Catalyst Center:
+1. The client sends POST /dna/system/api/v1/auth/token with the username and password using Basic authentication.
+2. The controller replies 200 OK with a body such as {"Token": "eyJhbGciOi..."}.
+3. The client puts this value in the X-Auth-Token header of every later request.
+4. When the token expires, the client requests a new one.
+
+Sample REST API GET request:
+GET /dna/intent/api/v1/network-device
+Accept: application/json
+X-Auth-Token: eyJhbGciOi...
+Response 200 OK:
+{"response": [{"hostname": "R1", "managementIpAddress": "10.1.1.1", "platformId": "ISR4331"}]}
+
+REST API tools:
+- Postman: graphical tool for testing API requests.
+- curl: command-line tool, for example curl -X GET -H "X-Auth-Token: abc" https://dnac.example.com/dna/intent/api/v1/network-device
+- Python requests: library used in scripts, for example requests.get(url, headers=headers).
+To get a token with curl: curl -X POST -u admin:password https://dnac.example.com/dna/system/api/v1/auth/token
+
+REST API webhooks:
+A normal API call is a pull: the client asks the server for data. A webhook is a push: the server sends an HTTP POST to a URL the client registered when an event happens, such as a device going down. Webhooks avoid constant polling.
+
+REST API troubleshooting tips:
+- 401 Unauthorized: the token is missing, wrong, or expired.
+- 400 Bad Request: check the JSON body for syntax errors.
+- 404 Not Found: check the URI path for typos.
+
+CCNA exam tips for REST APIs:
+- Know the CRUD mapping: POST create, GET read, PUT or PATCH update, DELETE delete.
+- REST is stateless, so each request carries its own token.
+- Know that 401 means authentication failed and 403 means not allowed.
+
+Common questions about REST APIs:
+Q: Which HTTP method is used to create a resource?
+A: POST is used to create a new resource.
+
+Q: What does HTTP status code 201 mean?
+A: 201 Created means a new resource was successfully created.
+
+Q: What does stateless mean in REST?
+A: Stateless means the server keeps no session data, so each request has all needed information.
+
+Q: Which header carries the Catalyst Center token?
+A: The X-Auth-Token header carries the token in Catalyst Center API requests.
+
+Q: What is a webhook?
+A: A webhook is an HTTP POST that a server pushes to a registered URL when an event occurs.

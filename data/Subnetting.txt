@@ -1,0 +1,79 @@
+IPv4 Subnetting
+
+Subnetting divides one large IPv4 network into smaller networks called subnets. Subnetting reduces broadcast domain size, improves security and management, and avoids wasting addresses. CIDR (Classless Inter-Domain Routing) notation writes the mask as a prefix length, for example /26 means 26 network bits (255.255.255.192).
+
+Subnetting formulas:
+- Usable hosts per subnet = 2^h - 2, where h is the number of host bits. The 2 removed addresses are the network address and the broadcast address.
+- Number of subnets = 2^s, where s is the number of bits borrowed from the host portion.
+Example: a /26 has 6 host bits, so 2^6 - 2 = 62 usable hosts.
+
+Subnetting prefix, mask and hosts reference (/24 to /30):
+- /24 = 255.255.255.0, 256 addresses, 254 usable hosts.
+- /25 = 255.255.255.128, 128 addresses, 126 usable hosts.
+- /26 = 255.255.255.192, 64 addresses, 62 usable hosts.
+- /27 = 255.255.255.224, 32 addresses, 30 usable hosts.
+- /28 = 255.255.255.240, 16 addresses, 14 usable hosts.
+- /29 = 255.255.255.248, 8 addresses, 6 usable hosts.
+- /30 = 255.255.255.252, 4 addresses, 2 usable hosts.
+
+Subnetting block size (magic number) method:
+Find the interesting octet (where the mask is not 255 or 0) and subtract its mask value from 256. For /26 the mask octet is 192, so the block size is 256 - 192 = 64. Subnets start at multiples of the block size.
+
+Worked example 1: 192.168.10.0/24 into 4 subnets:
+Borrow 2 bits (2^2 = 4 subnets), giving /26 (255.255.255.192), block size 64, 62 usable hosts each.
+- Subnet 1: network 192.168.10.0, first host .1, last host .62, broadcast .63
+- Subnet 2: network 192.168.10.64, first host .65, last host .126, broadcast .127
+- Subnet 3: network 192.168.10.128, first host .129, last host .190, broadcast .191
+- Subnet 4: network 192.168.10.192, first host .193, last host .254, broadcast .255
+
+Worked example 2: find the network for 172.16.45.130/20:
+A /20 mask is 255.255.240.0, so the interesting octet is the third octet and the block size is 256 - 240 = 16. Multiples of 16 are 0, 16, 32, 48. The value 45 falls between 32 and 48, so the network is 172.16.32.0 and the broadcast is 172.16.47.255. Usable hosts are 172.16.32.1 to 172.16.47.254 (2^12 - 2 = 4094 hosts).
+
+Subnetting worked example 3: 192.168.50.0/24 into /27 subnets:
+Borrow 3 bits (2^3 = 8 subnets), giving /27 (255.255.255.224), block size 256 - 224 = 32, and 2^5 - 2 = 30 usable hosts each. The 8 subnets start at .0, .32, .64, .96, .128, .160, .192 and .224.
+- Subnet 1: network 192.168.50.0, first host .1, last host .30, broadcast .31
+- Subnet 3: network 192.168.50.64, first host .65, last host .94, broadcast .95
+- Subnet 8: network 192.168.50.224, first host .225, last host .254, broadcast .255
+
+How to find which subnet a host belongs to (subnetting steps):
+1. Find the interesting octet and the block size (256 minus the mask octet).
+2. List the multiples of the block size in that octet.
+3. The network address is the largest multiple that is less than or equal to the host value.
+4. The broadcast address is the next multiple minus 1.
+
+Subnetting examples of finding the subnet of a host:
+Example: host 192.168.50.100/27 has block size 32. The multiples are 0, 32, 64, 96, 128. The value 100 is between 96 and 128, so the network is 192.168.50.96, the broadcast is 192.168.50.127, and usable hosts are .97 to .126.
+Example: host 10.0.0.200/29 has block size 8. 200 is an exact multiple of 8, so the network is 10.0.0.200, the broadcast is 10.0.0.207, and usable hosts are .201 to .206.
+
+VLSM subnetting example:
+VLSM (Variable Length Subnet Masking) uses different masks in one network, assigning the largest subnets first. From 192.168.20.0/24: LAN A needs 100 hosts, so use /25 (192.168.20.0 - .127). LAN B needs 50 hosts, so use /26 (192.168.20.128 - .191). The WAN link needs 2 hosts, so use /30 (192.168.20.192 - .195).
+
+Subnetting point-to-point links (/30 and /31):
+A /30 (255.255.255.252) gives 2 usable hosts, for example network 10.1.1.0, hosts .1 and .2, broadcast .3. A /31 (RFC 3021) has no network or broadcast address, so both addresses are usable on a point-to-point link.
+Router(config-if)# ip address 10.1.1.1 255.255.255.252
+
+Subnetting and route summarization basics (supernetting):
+Summarization combines several contiguous subnets into one shorter prefix, which makes routing tables smaller. Write the networks in binary and count the bits they have in common. Example: 172.16.0.0/24, 172.16.1.0/24, 172.16.2.0/24 and 172.16.3.0/24 have third octets 0 to 3 (000000xx), so the first 22 bits match and the summary is 172.16.0.0/22 (255.255.252.0). Likewise 192.168.4.0/24 to 192.168.7.0/24 summarize to 192.168.4.0/22.
+
+Common subnetting mistakes:
+- Forgetting to subtract 2 for the network and broadcast addresses.
+- Assigning the network or broadcast address to a host.
+- Using the block size in the wrong octet.
+- In VLSM, not assigning the largest subnets first, which causes overlaps.
+
+CCNA exam tips for subnetting:
+- Memorize the /24 to /30 masks and block sizes (128, 64, 32, 16, 8, 4).
+- Use the block size method instead of full binary conversion to save time.
+- A /30 or /31 is the usual choice for point-to-point router links.
+
+Common questions about subnetting:
+Q: How many usable hosts are in a /28 subnet?
+A: A /28 has 4 host bits, so it has 2^4 - 2 = 14 usable hosts.
+Q: What is the subnet mask for /27?
+A: The subnet mask for /27 is 255.255.255.224, with a block size of 32.
+Q: How many subnets do you get by borrowing 3 bits from a /24?
+A: Borrowing 3 bits gives 2^3 = 8 subnets of /27, each with 30 usable hosts.
+Q: What is the broadcast address of 192.168.10.64/26?
+A: The broadcast address of 192.168.10.64/26 is 192.168.10.127.
+Q: What is the summary route for 172.16.0.0/24 through 172.16.3.0/24?
+A: The summary route is 172.16.0.0/22, which uses mask 255.255.252.0.

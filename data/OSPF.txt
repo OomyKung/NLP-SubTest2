@@ -1,0 +1,87 @@
+OSPF (Open Shortest Path First)
+
+OSPF is an open-standard link-state routing protocol. Each router builds a complete map of the network, called the Link-State Database (LSDB), and runs Dijkstra's Shortest Path First (SPF) algorithm to find the best route to every destination. OSPFv2 is used for IPv4 and OSPFv3 for IPv6. The administrative distance of OSPF is 110. OSPF sends hellos to multicast 224.0.0.5 (all OSPF routers) and uses 224.0.0.6 to reach the DR and BDR.
+
+OSPF metric (cost):
+Cost = reference bandwidth / interface bandwidth. The default reference bandwidth is 100 Mbps, so FastEthernet and faster links all get a cost of 1. Use "auto-cost reference-bandwidth" to adjust it.
+Examples with the default 100 Mbps: 10 Mbps Ethernet = 100 / 10 = cost 10. 100 Mbps = cost 1. 1 Gbps = cost 1, because cost cannot be lower than 1. The route cost is the sum of the outgoing interface costs along the path. With "auto-cost reference-bandwidth 10000", 1 Gbps = cost 10 and 10 Gbps = cost 1. "ip ospf cost 5" sets one interface cost.
+
+OSPF router ID:
+Each OSPF router needs a unique 32-bit Router ID. It is chosen in this order: manually configured router-id, the highest loopback IP address, then the highest active physical interface IP address. After changing it, "clear ip ospf process" applies the new ID.
+
+OSPF neighbor adjacency and states:
+Down -> Init -> 2-Way -> ExStart -> Exchange -> Loading -> Full.
+- Down: no hellos received.
+- Init: a hello arrived but does not list this router's ID yet.
+- 2-Way: both routers see each other. DROTHERs stay in 2-Way with each other.
+- ExStart: master and slave are chosen.
+- Exchange: DBD (database description) packets are sent.
+- Loading: missing LSAs are requested (LSR) and received (LSU).
+- Full: the LSDBs are synchronized.
+
+OSPF neighbor requirements (must match):
+Neighbors must agree on area ID, subnet, hello and dead timers (default 10 and 40 seconds on broadcast networks), authentication, and MTU.
+The area type (for example stub) must also match, and router IDs must be unique.
+
+OSPF hello and dead timers:
+The default OSPF hello timer is 10 seconds and the dead timer is 40 seconds on broadcast and point-to-point links. On non-broadcast networks they are 30 and 120 seconds. Change them with "ip ospf hello-interval" and "ip ospf dead-interval".
+
+OSPF DR and BDR election:
+On multi-access networks such as Ethernet, OSPF elects a Designated Router (DR) and a Backup DR to reduce the number of adjacencies. The highest OSPF interface priority wins (default 1, priority 0 means never become DR). If tied, the highest Router ID wins.
+The election is not preemptive: a new router with higher priority does not replace the current DR. Other routers (DROTHERs) become Full only with the DR and BDR. Point-to-point links elect no DR.
+
+OSPF Areas:
+OSPF uses areas to divide a large network into smaller parts. This keeps the LSDB smaller, reduces SPF calculations, and limits the impact of topology changes to one area.
+- Area 0 is the backbone area. All other areas must connect to Area 0.
+- Single-area OSPF places all routers in Area 0, which is fine for small networks.
+- Multi-area OSPF uses several areas connected to the backbone.
+- An Area Border Router (ABR) has interfaces in Area 0 and at least one other area and can summarize routes between areas.
+- An Autonomous System Boundary Router (ASBR) redistributes external routes into OSPF.
+- Internal routers have all interfaces in one area.
+
+OSPF LSA types:
+Common LSA types: Type 1 (Router LSA), Type 2 (Network LSA from the DR), Type 3 (Summary LSA from the ABR), Type 5 (External LSA from the ASBR).
+Every router creates a Type 1 LSA that stays in its area. Only the DR creates a Type 2 LSA for its segment. ABRs create Type 3 LSAs to send networks between areas.
+
+OSPF configuration:
+Router(config)# router ospf 1
+Router(config-router)# router-id 1.1.1.1
+Router(config-router)# network 10.1.1.0 0.0.0.255 area 0
+Router(config-router)# passive-interface g0/1
+Router(config-router)# default-information originate
+The process ID (1) is locally significant and does not need to match. The network command uses a wildcard mask. Interface mode alternative: "ip ospf 1 area 0".
+
+OSPF passive-interface and default route:
+A passive interface stops sending hellos, so no neighbors form on it, but its network is still advertised. Use it on host-facing LANs. "default-information originate" advertises the router's own default route (for example toward an ISP) into OSPF.
+
+OSPF verification:
+Verification: show ip ospf neighbor, show ip ospf interface brief, show ip route ospf.
+Router# show ip ospf neighbor
+Neighbor ID  Pri  State        Dead Time  Address    Interface
+2.2.2.2      1    FULL/DR      00:00:35   10.1.1.2   Gi0/0
+3.3.3.3      1    2WAY/DROTHER 00:00:31   10.1.1.3   Gi0/0
+FULL/DR is a full adjacency with the DR. 2WAY/DROTHER is normal between DROTHERs.
+
+OSPF troubleshooting:
+No neighbor: check area, subnet, timers, authentication, and passive-interface. Stuck in ExStart/Exchange: MTU mismatch. Duplicate router IDs cause unstable routing.
+
+CCNA exam tips for OSPF:
+- OSPF AD is 110; hello 10 s, dead 40 s.
+- The DR is chosen by highest priority, then highest router ID.
+- Cost = 100 Mbps / interface bandwidth by default.
+
+Common questions about OSPF:
+Q: How is the OSPF router ID chosen?
+A: It uses the manual router-id, else the highest loopback IP, else the highest active interface IP.
+
+Q: What must match for two OSPF routers to become neighbors?
+A: Area ID, subnet, hello and dead timers, authentication, MTU, and area type must match.
+
+Q: What is the OSPF cost of a 10 Mbps link?
+A: With the default 100 Mbps reference bandwidth, the cost is 10.
+
+Q: What are the default OSPF hello and dead timers?
+A: The hello timer is 10 seconds and the dead timer is 40 seconds on broadcast and point-to-point links.
+
+Q: How is the OSPF DR elected?
+A: The highest interface priority wins, then the highest router ID, and priority 0 never becomes DR.

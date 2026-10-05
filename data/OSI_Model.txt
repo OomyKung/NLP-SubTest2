@@ -1,0 +1,80 @@
+OSI Model (Open Systems Interconnection Reference Model)
+
+The OSI model is a 7-layer reference model created by ISO that describes how data moves from an application on one host to an application on another host. Each layer of the OSI model has a specific job and serves the layer above it. Engineers use the OSI model to troubleshoot layer by layer.
+
+The 7 layers of the OSI model (top to bottom):
+- Layer 7 Application: network services for user applications. Examples: HTTP, HTTPS, FTP, DNS, SMTP, SSH.
+- Layer 6 Presentation: data format, encryption, and compression. Examples: JPEG, ASCII, TLS encryption.
+- Layer 5 Session: opens, manages, and closes sessions between applications.
+- Layer 4 Transport: end-to-end delivery, segmentation, port numbers, reliability. Examples: TCP, UDP.
+- Layer 3 Network: logical addressing and routing between networks. Examples: IPv4, IPv6, ICMP, OSPF. Device: router, Layer 3 switch.
+- Layer 2 Data Link: framing, MAC addressing, and error detection on the local link. Examples: Ethernet, 802.11, PPP. Device: switch, access point.
+- Layer 1 Physical: bits as electrical, light, or radio signals; cables and connectors. Devices: hubs, repeaters, cables.
+
+OSI model devices per layer:
+- Layer 1: hubs, repeaters, cables, connectors, and media converters. A hub repeats bits out every port and does not read addresses.
+- Layer 2: switches, bridges, NICs, and wireless access points. They read MAC addresses in frames.
+- Layer 3: routers and Layer 3 (multilayer) switches. They read IP addresses in packets.
+- Layer 4 to 7: firewalls, IPS devices, and load balancers can inspect port numbers and application data.
+Each switch port is its own collision domain. Each router interface is its own broadcast domain.
+
+OSI model PDU names:
+The Protocol Data Unit (PDU) has a different name at each layer. Layers 5-7: data. Layer 4: segment (TCP) or datagram (UDP). Layer 3: packet. Layer 2: frame. Layer 1: bits.
+
+OSI model encapsulation:
+When a host sends data, each layer adds its own header as the data moves down the stack. The transport layer adds a TCP or UDP header to create a segment, the network layer adds an IP header to create a packet, and the data link layer adds an Ethernet header and FCS trailer to create a frame. The physical layer then transmits the frame as bits.
+
+OSI model encapsulation walk-through (web request):
+1. A browser creates an HTTP GET request (Layer 7 data).
+2. TCP adds a header with source port 50000 and destination port 80, creating a segment.
+3. IP adds a header with source IP 192.168.1.10 and the web server IP, creating a packet.
+4. Ethernet adds a header with the source PC MAC and the default gateway MAC, plus an FCS trailer, creating a frame.
+5. The NIC sends the frame as bits on the cable.
+At each router, the frame header is removed and a new one is built for the next link, but the IP addresses stay the same.
+
+OSI model de-encapsulation:
+The receiving host reverses the process. Each layer reads and removes its own header and passes the remaining data up to the next layer until the application receives the original data.
+
+OSI model mnemonic:
+From Layer 1 to Layer 7: "Please Do Not Throw Sausage Pizza Away" (Physical, Data Link, Network, Transport, Session, Presentation, Application). From Layer 7 to Layer 1: "All People Seem To Need Data Processing".
+
+OSI model troubleshooting tip:
+A bottom-up approach starts at Layer 1, for example by checking cables and "show interfaces status", then moves up to Layer 2 and Layer 3 with "show ip interface brief" and ping.
+
+OSI model troubleshooting methods:
+- Bottom-up: start at Layer 1 and move up. Best when you suspect a physical problem, such as a new cable.
+- Top-down: start at Layer 7 with the application and move down. Best when the problem seems to affect one application only.
+- Divide-and-conquer: start in the middle, usually with a ping at Layer 3. If ping works, layers 1-3 are fine and you check upward; if it fails, you check downward.
+- Follow-the-path: trace the path the traffic takes, for example with traceroute, to find where it stops.
+
+OSI model common problems by layer:
+- Layer 1: unplugged or damaged cable, interface "down/down", CRC errors.
+- Layer 2: VLAN mismatch, duplex mismatch, port in err-disabled state.
+- Layer 3: wrong IP address, mask, or default gateway; missing route.
+- Layer 4 and above: blocked port by an ACL or firewall, DNS failure, service not running.
+
+OSI model vs TCP/IP model:
+- OSI has 7 layers; TCP/IP has 4 layers (Application, Transport, Internet, Network Access).
+- TCP/IP Application covers OSI layers 5-7, and Network Access covers OSI layers 1-2.
+- OSI is a reference model for learning and troubleshooting; TCP/IP is the protocol suite actually used.
+
+CCNA exam tips for the OSI model:
+- Memorize the PDU for each layer: data, segment, packet, frame, bits.
+- Know which device works at which layer: hub L1, switch L2, router L3.
+- MAC addresses are Layer 2, IP addresses are Layer 3, port numbers are Layer 4.
+
+Common questions about the OSI model:
+Q: Which OSI layer does a router work at?
+A: A router works at Layer 3, the Network layer, and forwards packets by IP address.
+
+Q: What is the PDU at the Data Link layer?
+A: The PDU at Layer 2 is called a frame.
+
+Q: What is the difference between top-down and bottom-up troubleshooting?
+A: Bottom-up starts at the Physical layer and moves up, while top-down starts at the Application layer and moves down.
+
+Q: Which layer handles encryption?
+A: The Presentation layer (Layer 6) handles encryption, compression, and data format.
+
+Q: What happens to the MAC addresses when a packet crosses a router?
+A: The router builds a new frame with new source and destination MAC addresses, while the IP addresses stay the same.

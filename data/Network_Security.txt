@@ -1,0 +1,92 @@
+Network Security Fundamentals
+
+Network security protects data and devices from attacks through policies and technical controls.
+
+Network security key concepts:
+- CIA triad: Confidentiality (only authorized users see data), Integrity (data is not altered), Availability (systems stay reachable).
+- Threat: a potential danger to an asset.
+- Vulnerability: a weakness that can be used to cause harm.
+- Exploit: a method or tool that takes advantage of a vulnerability.
+- Mitigation: an action that reduces the risk of a threat.
+
+Network security attacks:
+- DoS and DDoS: overwhelm a target so it cannot serve users; DDoS uses many hosts (a botnet).
+- Spoofing: faking a source IP or MAC address.
+- Reflection and amplification: spoofed requests trigger large replies to the victim.
+- Man-in-the-middle: intercepting traffic, for example with ARP spoofing.
+- Reconnaissance: gathering information with ping sweeps and port scans.
+- Malware: viruses, worms, trojans, and ransomware.
+- Social engineering and phishing: tricking users into revealing information.
+- Password attacks: guessing, dictionary, and brute-force attacks.
+
+AAA in network security:
+Authentication verifies who the user is, authorization decides what the user may do, and accounting records what the user did. RADIUS uses UDP 1812 and 1813, combines authentication and authorization, and encrypts only the password. TACACS+ is Cisco-developed, uses TCP 49, separates all three AAA functions, and encrypts the entire payload, so it suits device administration.
+
+802.1X port-based network security access control:
+- Supplicant: the client device requesting access.
+- Authenticator: the switch or WLC controlling the port.
+- Authentication server: usually a RADIUS server that validates credentials.
+
+Network security program elements:
+User awareness campaigns, formal training, and physical access control such as badges and locked rooms.
+
+Network security passwords, MFA, and certificates:
+Use long, complex passwords, change defaults, and avoid reuse. MFA combines two or more factors: something you know, have, or are.
+For example, a password plus a code from a phone app is MFA. Digital certificates, issued by a Certificate Authority (CA), prove the identity of a server or user with a public key, and are used by HTTPS and VPNs.
+
+Layer 2 network security features:
+Port security limits MAC addresses on a port. DHCP snooping blocks rogue DHCP servers on untrusted ports. Dynamic ARP Inspection uses the DHCP snooping table to drop spoofed ARP messages.
+
+DHCP snooping network security feature:
+All switch ports are untrusted by default. Only ports toward the real DHCP server or uplinks are set as trusted. Untrusted ports drop DHCP server messages (OFFER and ACK). The switch builds a binding table of MAC address, IP address, VLAN, and port for each client.
+Switch(config)# ip dhcp snooping
+Switch(config)# ip dhcp snooping vlan 10
+Switch(config)# interface g0/1
+Switch(config-if)# ip dhcp snooping trust
+Switch# show ip dhcp snooping binding
+Both the global command and the vlan command are required.
+
+Dynamic ARP Inspection (DAI) network security feature:
+DAI checks ARP messages on untrusted ports against the DHCP snooping binding table. If the IP-to-MAC mapping does not match, the ARP message is dropped, which stops ARP spoofing and man-in-the-middle attacks. Uplink ports are set as trusted.
+Switch(config)# ip arp inspection vlan 10
+Switch(config)# interface g0/1
+Switch(config-if)# ip arp inspection trust
+
+Network security VPNs:
+A site-to-site VPN connects whole networks through VPN gateways, while a remote-access VPN connects individual users. IPsec provides encryption, integrity, and authentication.
+
+Network security VPN types:
+- Site-to-site IPsec VPN: always on between two routers or firewalls; hosts are unaware of it.
+- Remote-access VPN: a user runs a client, such as Cisco AnyConnect, to connect to the company network.
+- SSL/TLS VPN: remote access through TLS, sometimes with only a web browser.
+- GRE over IPsec: GRE carries multicast and routing protocols, and IPsec adds encryption.
+
+Firewalls and IPS in network security:
+A firewall filters traffic between security zones, such as inside, outside, and DMZ. A stateful firewall tracks connections and allows return traffic for sessions started inside. A next-generation firewall (NGFW) adds application awareness, URL filtering, and an IPS.
+An IDS works out of band on a copy of traffic and only sends alerts. An IPS sits inline and can block malicious traffic in real time, using signatures.
+
+Wireless network security:
+WPA2 uses AES-CCMP encryption, and WPA3 adds SAE to protect against password guessing. Personal mode uses a pre-shared key (PSK), while Enterprise mode uses 802.1X with a RADIUS server.
+
+CCNA exam tips for network security:
+- Know the difference between threat, vulnerability, exploit, and mitigation.
+- RADIUS is UDP and encrypts only the password; TACACS+ is TCP 49 and encrypts everything.
+- DAI depends on the DHCP snooping binding table.
+- IDS alerts; IPS blocks.
+
+Common questions about network security:
+
+Q: What does DHCP snooping protect against?
+A: DHCP snooping stops rogue DHCP servers by dropping DHCP server messages on untrusted ports.
+
+Q: What is the difference between an IDS and an IPS?
+A: An IDS monitors a copy of traffic and sends alerts, while an IPS is inline and can block attacks.
+
+Q: What is the difference between a site-to-site VPN and a remote-access VPN?
+A: A site-to-site VPN connects whole networks, while a remote-access VPN connects a single user to the network.
+
+Q: What is MFA?
+A: MFA requires two or more factors: something you know, something you have, or something you are.
+
+Q: What is the difference between RADIUS and TACACS+?
+A: RADIUS uses UDP 1812 and 1813 and encrypts only the password, while TACACS+ uses TCP 49 and encrypts the entire payload.

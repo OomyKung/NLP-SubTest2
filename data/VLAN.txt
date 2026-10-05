@@ -1,0 +1,84 @@
+VLAN (Virtual Local Area Network)
+
+A VLAN is a logical group of devices that share the same broadcast domain, even if they are connected to different physical switches. By default, every port on a Cisco switch belongs to VLAN 1. Creating additional VLANs divides one physical switch into several separate Layer 2 networks, which reduces broadcast traffic, improves security, and makes the network easier to manage.
+
+Benefits of VLANs:
+- Smaller broadcast domains and less unnecessary traffic.
+- Better security, because users in one VLAN cannot reach another VLAN without a Layer 3 device.
+- Flexible grouping of users by department or function instead of physical location.
+
+VLAN ranges:
+- Normal range: VLAN 1 to 1005. VLANs 1002-1005 are reserved for legacy Token Ring and FDDI.
+- Extended range: VLAN 1006 to 4094.
+
+Default VLAN (VLAN 1):
+VLAN 1 is the default VLAN. All switch ports are in VLAN 1 out of the box, and VLAN 1 is also the default native VLAN and the default management VLAN. VLAN 1 and VLANs 1002 to 1005 cannot be renamed or deleted. Control protocols such as CDP, VTP, PAgP and DTP are sent in VLAN 1, so it is a best practice not to use VLAN 1 for user data.
+
+VLAN access ports and trunk ports:
+An access port carries traffic for only one VLAN and usually connects to an end device such as a PC or printer. A trunk port carries traffic for multiple VLANs between switches, or between a switch and a router. Cisco trunks use the IEEE 802.1Q standard, which inserts a 4-byte tag into the Ethernet frame to identify the VLAN. Frames from the native VLAN are sent untagged. The native VLAN is VLAN 1 by default, and it must match on both ends of the trunk.
+
+VLAN basic configuration:
+Switch(config)# vlan 10
+Switch(config-vlan)# name SALES
+Switch(config)# interface fa0/1
+Switch(config-if)# switchport mode access
+Switch(config-if)# switchport access vlan 10
+
+Voice VLAN configuration:
+A voice VLAN lets one access port carry a PC in the data VLAN and an IP phone in a separate voice VLAN. The switch tells the Cisco phone the voice VLAN with CDP. The phone tags voice frames with 802.1Q and CoS 5, while the PC traffic stays untagged in the access VLAN.
+Switch(config)# interface fa0/5
+Switch(config-if)# switchport mode access
+Switch(config-if)# switchport access vlan 10
+Switch(config-if)# switchport voice vlan 150
+Switch(config-if)# mls qos trust cos
+
+VLAN trunk configuration:
+Switch(config)# interface gi0/1
+Switch(config-if)# switchport mode trunk
+Switch(config-if)# switchport trunk native vlan 99
+Switch(config-if)# switchport trunk allowed vlan 10,20,99
+
+VLAN database and the vlan.dat file:
+Normal range VLANs are stored in the file vlan.dat in flash memory, not in the startup configuration. Erasing the startup configuration with "erase startup-config" does not remove VLANs. To fully reset a switch, also run "delete flash:vlan.dat" and then reload. With VTP version 1 or 2, extended range VLANs can only be created in transparent mode and are saved in the running configuration.
+
+VTP (VLAN Trunking Protocol) brief:
+VTP is a Cisco protocol that copies VLAN definitions from a VTP server to VTP clients over trunks in the same VTP domain. Modes are server (default), client and transparent. A switch with a higher configuration revision number can overwrite VLANs on every switch, so many networks use transparent mode or turn VTP off.
+
+VLAN verification commands:
+- show vlan brief: lists VLANs and the access ports assigned to each.
+- show interfaces trunk: shows trunk ports, native VLAN, and allowed VLANs.
+- show interfaces fa0/1 switchport: shows the mode, access VLAN and voice VLAN of one port.
+Sample output of show vlan brief:
+VLAN Name        Status    Ports
+1    default     active    Fa0/2, Fa0/3
+10   SALES       active    Fa0/1, Fa0/5
+150  VOICE       active    Fa0/5
+Trunk ports are not listed in show vlan brief.
+
+Troubleshooting a missing VLAN:
+- If a VLAN is deleted, its access ports stay assigned to it but become inactive, and the hosts lose connectivity. "show interfaces fa0/1 switchport" shows "Access Mode VLAN: 10 (Inactive)". Recreate the VLAN with "vlan 10" to fix it.
+- On Cisco IOS, "switchport access vlan 30" automatically creates VLAN 30 if it does not exist.
+- Check that the VLAN is allowed on every trunk in the path.
+- Check that the host IP address is in the subnet used by that VLAN.
+
+VLAN best practices:
+Move the native VLAN away from VLAN 1, shut down unused ports and place them in an unused VLAN, and disable DTP negotiation with "switchport nonegotiate" on trunk links to reduce VLAN hopping attacks.
+
+CCNA exam tips for VLANs:
+- Each VLAN is its own broadcast domain and normally its own IP subnet.
+- Communication between VLANs requires a router or Layer 3 switch.
+- An access port can have one data VLAN plus one voice VLAN.
+
+Common questions about VLANs:
+Q: What is the default VLAN on a Cisco switch?
+A: VLAN 1 is the default VLAN, and all ports belong to it by default.
+Q: Where are VLANs stored on a Cisco switch?
+A: Normal range VLANs are stored in the vlan.dat file in flash memory.
+Q: What is the range of extended VLANs?
+A: Extended range VLANs are 1006 to 4094.
+Q: How do you configure a voice VLAN?
+A: Use "switchport voice vlan 150" on the access port in interface configuration mode.
+Q: Why does a port show as inactive in a VLAN?
+A: The port is assigned to a VLAN that does not exist in the VLAN database.
+Q: What is the difference between an access port and a trunk port?
+A: An access port carries traffic for only one VLAN and connects to an end device such as a PC. A trunk port carries traffic for many VLANs between switches or to a router, using 802.1Q tags, and sends native VLAN frames untagged.

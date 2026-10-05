@@ -1,0 +1,118 @@
+JSON (JavaScript Object Notation)
+
+JSON is a lightweight, human-readable data format used to exchange data between applications. REST APIs, including Cisco DNA Center and RESTCONF, commonly send and receive data in JSON. CCNA students should be able to read JSON and identify its structure.
+
+JSON data types:
+- String: text in double quotes, such as "GigabitEthernet0/1".
+- Number: integer or decimal, such as 24 or 1.5, without quotes.
+- Boolean: true or false, in lowercase.
+- Null: an empty value, written as null.
+- Object: an unordered set of key/value pairs inside curly braces { }.
+- Array: an ordered list of values inside square brackets [ ].
+
+JSON syntax rules:
+- Data is written as key/value pairs separated by a colon, such as "name": "Gi0/1".
+- Keys must always be strings in double quotes.
+- Key/value pairs and array items are separated by commas.
+- No trailing comma after the last item.
+- Whitespace and indentation are insignificant.
+
+Sample JSON for a Cisco interface:
+{
+  "name": "GigabitEthernet0/1",
+  "ip": "192.168.1.1",
+  "enabled": true,
+  "vlans": [10, 20, 30]
+}
+Here the whole structure is an object with four keys. The value of "vlans" is an array of numbers.
+
+JSON nested example:
+{
+  "device": {
+    "hostname": "R1",
+    "interfaces": [
+      {"name": "Gi0/0", "enabled": true},
+      {"name": "Gi0/1", "enabled": false}
+    ]
+  }
+}
+The "interfaces" key holds an array of two objects.
+
+JSON array of objects example:
+[
+  {"vlan_id": 10, "name": "USERS"},
+  {"vlan_id": 20, "name": "VOICE"},
+  {"vlan_id": 99, "name": "MGMT"}
+]
+This JSON is an array that contains three objects. Each object describes one VLAN with two keys.
+
+Identifying JSON object vs array:
+If the value starts with a curly brace it is an object with named keys. If it starts with a square bracket it is an array accessed by position.
+
+How to count elements in JSON:
+1. Find the outer brackets of the value you are asked about.
+2. For an object, count the key/value pairs at the top level only.
+3. For an array, count the items separated by commas at the top level only.
+4. Do not count keys inside nested objects as part of the outer object.
+In the nested example, "device" is one key, "interfaces" has two objects, and each object has two keys.
+
+Reading a JSON response from Catalyst Center:
+{
+  "response": [
+    {"hostname": "SW1", "managementIpAddress": "10.1.1.2", "reachabilityStatus": "Reachable"},
+    {"hostname": "SW2", "managementIpAddress": "10.1.1.3", "reachabilityStatus": "Unreachable"}
+  ],
+  "version": "1.0"
+}
+The top-level object has two keys: "response" and "version". The value of "response" is an array of two device objects. SW2 is unreachable. In Python, the IP of the first device is data["response"][0]["managementIpAddress"], and arrays start at index 0.
+
+JSON compared with XML and YAML:
+XML uses opening and closing tags, which makes it more verbose. YAML uses indentation instead of braces and is used in Ansible playbooks. JSON is the most common format for REST APIs.
+- JSON uses braces and brackets, XML uses tags, and YAML uses indentation.
+- JSON and YAML support numbers and booleans, while XML treats values as text.
+- YAML allows comments, but standard JSON does not.
+
+The same interface data in JSON, YAML, and XML:
+JSON:
+{"interface": {"name": "Gi0/1", "enabled": true}}
+YAML:
+interface:
+  name: Gi0/1
+  enabled: true
+XML:
+<interface>
+  <name>Gi0/1</name>
+  <enabled>true</enabled>
+</interface>
+YAML uses no braces and lists use a dash. XML has no data types, so all values are text.
+
+Common JSON syntax mistakes:
+- Using single quotes instead of double quotes.
+- Leaving a trailing comma after the last item.
+- Missing commas between pairs.
+- Writing True or TRUE instead of true.
+- Unmatched braces or brackets.
+
+CCNA exam tips for JSON:
+- Curly braces mean an object; square brackets mean an array.
+- Keys are always strings in double quotes; true, false, and null are lowercase.
+- Count only the top-level items when asked how many keys or elements exist.
+
+Common questions about JSON:
+Q: What do square brackets mean in JSON?
+A: Square brackets hold an array, which is an ordered list of values.
+
+Q: Can JSON keys use single quotes?
+A: No, JSON keys must be strings in double quotes.
+
+Q: How many objects are in the "response" array of the Catalyst Center example?
+A: The "response" array holds two device objects, SW1 and SW2.
+
+Q: Which data format uses indentation and is used by Ansible?
+A: YAML uses indentation and is used for Ansible playbooks.
+
+Q: Is whitespace important in JSON?
+A: No, whitespace and indentation are insignificant in JSON.
+
+Q: How do you access the first item of a JSON array in Python?
+A: Use index 0, because JSON arrays are read into Python lists that start at index 0.

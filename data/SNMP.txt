@@ -1,0 +1,79 @@
+SNMP (Simple Network Management Protocol)
+
+SNMP is a standard protocol used to monitor and manage network devices such as routers, switches, and servers. With SNMP, a central management station can read device information like interface status, CPU load, and traffic counters, and can even change some settings remotely.
+
+SNMP components:
+- SNMP manager: the Network Management Station (NMS) that polls devices and receives notifications.
+- SNMP agent: software running on the managed device that answers the manager.
+- MIB (Management Information Base): the database of variables an agent can report.
+- OID (Object Identifier): a unique numeric address for each variable in the MIB tree, for example 1.3.6.1.2.1.1.5 (sysName).
+
+SNMP MIB and OID example:
+The MIB is organized as a tree, and each number in an OID is one branch. The OID 1.3.6.1.2.1.1 means iso(1).org(3).dod(6).internet(1).mgmt(2).mib-2(1).system(1). The system group contains these objects.
+- 1.3.6.1.2.1.1.1 is sysDescr, the device description and IOS version.
+- 1.3.6.1.2.1.1.3 is sysUpTime, the time since the device booted.
+- 1.3.6.1.2.1.1.5 is sysName, the hostname.
+The OID 1.3.6.1.2.1.2.2.1.10 is ifInOctets, the bytes received on an interface. Vendors such as Cisco also have private MIBs under 1.3.6.1.4.1.
+
+SNMP operations:
+- Get: the manager requests the value of one OID.
+- GetNext: the manager requests the next OID in the MIB tree, useful for walking tables.
+- GetBulk: retrieves large blocks of data in one request (SNMPv2c and v3).
+- Set: the manager changes a value on the agent.
+- Trap: an unacknowledged message sent by the agent to alert the manager about an event.
+- Inform: like a Trap, but the manager must acknowledge it (SNMPv2c and v3).
+
+SNMP ports:
+SNMP uses UDP. Agents listen on UDP port 161 for Get and Set requests, and managers listen on UDP port 162 for Traps and Informs.
+
+SNMP polling vs traps:
+- Polling: the manager pulls data by sending Get requests to the agent on UDP 161 at regular intervals, for example every 5 minutes. It is good for graphs of CPU and bandwidth, but a problem may not be seen until the next poll.
+- Traps: the agent pushes a message to the manager on UDP 162 as soon as an event happens, such as an interface going down. Traps are fast but not acknowledged, so one can be lost.
+- Informs fix this because the manager acknowledges them and the agent resends if needed.
+Most networks use both: polling for statistics and traps for alerts.
+
+SNMP versions:
+SNMPv1 and SNMPv2c use community strings as a simple password, and they are sent in plaintext, so anyone capturing traffic can read them. SNMPv3 adds security with users and groups. Its security levels are noAuthNoPriv (username only), authNoPriv (authentication with SHA or MD5, no encryption), and authPriv (authentication plus encryption such as AES).
+
+SNMPv2c configuration:
+Router(config)# snmp-server community NetRO ro
+Router(config)# snmp-server location Bangkok-DC1
+Router(config)# snmp-server contact admin@example.com
+Router(config)# snmp-server host 192.168.1.50 version 2c NetRO
+Router(config)# snmp-server enable traps
+
+Basic SNMPv3 configuration:
+Router(config)# snmp-server group ADMINS v3 priv
+Router(config)# snmp-server user NETADMIN ADMINS v3 auth sha AuthPass123 priv aes 128 PrivPass123
+
+SNMP verification commands:
+- show snmp: SNMP packet counters and the location and contact.
+- show snmp community: configured community strings.
+- show snmp user and show snmp group: SNMPv3 users and groups.
+- show snmp host: where traps and informs are sent.
+
+SNMP security best practices:
+Use SNMPv3 with authPriv whenever possible, use read-only (ro) access unless Set is required, and limit which hosts can query SNMP with an ACL.
+Never leave default community strings such as public and private. To bind an ACL, add its number after the access type, for example snmp-server community NetRO ro 10 allows only hosts permitted by ACL 10. Avoid read-write (rw) communities with SNMPv2c because the string is sent in clear text.
+
+CCNA exam tips for SNMP:
+- UDP 161 for the agent, UDP 162 for traps and informs.
+- Traps are not acknowledged; informs are.
+- Only SNMPv3 authPriv gives both authentication and encryption.
+
+Common questions about SNMP:
+
+Q: What is the difference between a trap and an inform?
+A: A trap is not acknowledged by the manager, while an inform must be acknowledged, so it is more reliable.
+
+Q: What is a MIB?
+A: A MIB is the database of variables that an SNMP agent can report, and each variable is identified by an OID.
+
+Q: Which SNMP version is the most secure?
+A: SNMPv3 is the most secure because it supports authentication and encryption with the authPriv level.
+
+Q: What is the difference between SNMP polling and traps?
+A: With polling the manager asks the agent for data on UDP 161, while with traps the agent sends alerts to the manager on UDP 162 when an event occurs.
+
+Q: What does the OID 1.3.6.1.2.1.1.5 represent?
+A: It represents sysName, the hostname of the device.

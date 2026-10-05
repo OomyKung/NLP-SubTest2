@@ -1,0 +1,89 @@
+Ethernet (IEEE 802.3)
+
+Ethernet is the most common LAN technology and operates at Layer 1 and Layer 2 of the OSI model. Ethernet defines cabling, signaling speeds, and the frame format that switches use to deliver data between devices using MAC addresses.
+
+Ethernet II frame format:
+- Preamble (7 bytes): alternating 1s and 0s used for clock synchronization.
+- SFD, Start Frame Delimiter (1 byte): marks the start of the frame.
+- Destination MAC address (6 bytes).
+- Source MAC address (6 bytes).
+- Type (2 bytes): identifies the Layer 3 protocol, for example 0x0800 for IPv4, 0x86DD for IPv6, 0x0806 for ARP.
+- Payload (46 to 1500 bytes): the encapsulated packet. Short payloads are padded to 46 bytes.
+- FCS, Frame Check Sequence (4 bytes): a CRC used to detect corrupted frames.
+The minimum frame size is 64 bytes and the normal maximum is 1518 bytes (not counting preamble and SFD).
+
+Ethernet frame size and MTU:
+The minimum Ethernet frame is 64 bytes: 14 bytes of header, 46 bytes of payload, and 4 bytes of FCS. The default Ethernet MTU (Maximum Transmission Unit) is 1500 bytes, which is the largest IP packet that fits in one frame. An 802.1Q VLAN tag adds 4 bytes, so a tagged frame can be 1522 bytes. Frames larger than the maximum size are counted as giants, unless the switch is configured to support jumbo frames.
+
+Ethernet CSMA/CD and duplex:
+Early Ethernet used hubs and shared media, so devices used CSMA/CD (Carrier Sense Multiple Access with Collision Detection) to listen before sending and back off after a collision. Half duplex means a device can send or receive, but not both at once. Full duplex means it can send and receive at the same time, so there are no collisions and CSMA/CD is disabled. Switch ports connected to end devices normally run full duplex.
+
+Ethernet autonegotiation:
+By default, Cisco switch ports use "speed auto" and "duplex auto". Both sides advertise their abilities and pick the fastest common speed and full duplex. If the other side has autonegotiation disabled:
+- Speed: the port senses the speed from the signal, so speed still matches.
+- Duplex: the port cannot learn duplex. It uses half duplex at 10 or 100 Mbps and full duplex at 1000 Mbps.
+This is why hard-coding only one side often causes a duplex mismatch. Best practice is auto on both sides, or the same fixed values on both sides.
+
+Ethernet duplex mismatch:
+If one side is full duplex and the other is half duplex, the link still comes up but performs poorly. Symptoms include late collisions and collisions on the half-duplex side, CRC errors and runts on the full-duplex side, and slow throughput.
+
+Ethernet speed standards:
+- 10BASE-T: 10 Mbps over UTP.
+- 100BASE-TX: 100 Mbps Fast Ethernet over Cat5 UTP.
+- 1000BASE-T: 1 Gbps over Cat5e UTP using all four pairs.
+- 10GBASE-T: 10 Gbps over Cat6a UTP; 10GBASE-SR and 10GBASE-LR use fiber.
+All copper BASE-T standards above support a maximum cable length of 100 meters.
+
+Ethernet IEEE 802.3 standards list:
+- 802.3i: 10BASE-T (10 Mbps over UTP).
+- 802.3u: 100BASE-TX Fast Ethernet.
+- 802.3z: 1000BASE-SX and 1000BASE-LX Gigabit over fiber.
+- 802.3ab: 1000BASE-T Gigabit over copper.
+- 802.3ae: 10 Gigabit Ethernet over fiber.
+- 802.3an: 10GBASE-T over copper.
+- 802.3af, 802.3at, 802.3bt: Power over Ethernet (PoE, PoE+, PoE++).
+- 802.3ad: link aggregation (LACP), now moved to 802.1AX.
+
+Ethernet interface errors in show interfaces:
+- CRC: frames whose FCS check failed, often caused by bad cabling or interference.
+- Runts: frames smaller than 64 bytes.
+- Giants: frames larger than the maximum size.
+- Late collisions: collisions after the first 64 bytes, usually a duplex mismatch.
+- Input errors: the total of runts, giants, CRC, and other receive errors.
+- Output errors: frames that could not be sent, often from collisions.
+
+Configuring Ethernet speed and duplex:
+Switch(config)# interface gi0/1
+Switch(config-if)# speed 1000
+Switch(config-if)# duplex full
+Use "show interfaces gi0/1" or "show interfaces status" to verify speed, duplex, and error counters.
+
+Ethernet show interfaces sample output:
+GigabitEthernet0/1 is up, line protocol is up (connected)
+  MTU 1500 bytes, BW 1000000 Kbit/sec
+  Full-duplex, 1000Mb/s, media type is 10/100/1000BaseTX
+  0 runts, 0 giants, 0 throttles
+  25 input errors, 25 CRC, 0 frame, 0 overrun, 0 ignored
+  0 output errors, 0 collisions, 0 late collision
+Look at the first line for up/up, check speed and duplex, then check the counters. Here 25 CRC errors point to a cabling problem. Use "clear counters" and watch whether the errors keep increasing.
+
+CCNA exam tips for Ethernet:
+- Minimum frame 64 bytes, maximum 1518 bytes, MTU 1500 bytes.
+- Late collisions mean a duplex mismatch; CRC errors usually mean bad cabling.
+- If autonegotiation fails at 10 or 100 Mbps, the port falls back to half duplex.
+
+Common questions about Ethernet:
+Q: What is the default Ethernet MTU?
+A: The default Ethernet MTU is 1500 bytes.
+
+Q: What is the minimum Ethernet frame size?
+A: The minimum Ethernet frame size is 64 bytes, and smaller frames are counted as runts.
+
+Q: What duplex does a port choose if autonegotiation fails?
+A: It uses half duplex at 10 or 100 Mbps and full duplex at 1000 Mbps.
+
+Q: Which IEEE standard is 1000BASE-T?
+A: 1000BASE-T Gigabit Ethernet over copper is IEEE 802.3ab.
+
+Q: What causes CRC errors on an interface?
+A: CRC errors are usually caused by bad cables, interference, or a duplex mismatch.

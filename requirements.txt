@@ -1,0 +1,10 @@
+# CPU-only PyTorch (much smaller and faster to install on Streamlit Cloud,
+# which has no GPU). sentence-transformers needs torch.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+
+streamlit>=1.36.0
+sentence-transformers>=2.7.0
+faiss-cpu>=1.8.0
+groq>=0.9.0
+numpy>=1.24.0

@@ -1,0 +1,97 @@
+EIGRP (Enhanced Interior Gateway Routing Protocol)
+
+EIGRP is an advanced distance-vector routing protocol originally developed by Cisco and later published as an open standard (RFC 7868). It is sometimes described as a hybrid protocol because it combines distance-vector behavior with some link-state features such as neighbor relationships and partial, bounded updates. The administrative distance of internal EIGRP routes is 90, and external EIGRP routes have an administrative distance of 170. EIGRP routes appear with code D in the routing table.
+
+EIGRP key features:
+- Fast convergence using the DUAL (Diffusing Update Algorithm).
+- Supports unequal-cost load balancing with the "variance" command.
+- Sends partial and bounded updates only when changes occur, instead of periodic full updates.
+- Uses RTP (Reliable Transport Protocol) and multicast address 224.0.0.10.
+- Supports IPv4 and IPv6.
+EIGRP runs directly over IP using protocol number 88.
+
+EIGRP tables:
+1. Neighbor table: lists directly connected EIGRP neighbors.
+2. Topology table: stores all routes learned from neighbors.
+3. Routing table: contains the best routes (successors).
+
+EIGRP metric and K-values:
+By default EIGRP uses bandwidth and delay (K values K1 = 1 and K3 = 1). The slowest bandwidth along the path and the sum of delays are used to calculate the composite metric.
+The K-values are weights: K1 bandwidth, K2 load, K3 delay, K4 and K5 reliability. By default K2, K4, and K5 are 0, so load and reliability are not used. Simplified, metric = 256 x (10^7 / slowest bandwidth in kbps + total delay in tens of microseconds). K-values must match between neighbors.
+
+EIGRP DUAL terms:
+- Feasible Distance (FD): the best total metric to reach a destination from the local router.
+- Reported Distance (RD) or Advertised Distance: the metric reported by the neighbor.
+- Successor: the neighbor with the best path, installed in the routing table.
+- Feasible Successor: a backup path that is loop-free. A route is a feasible successor only if its RD is less than the current FD (the feasibility condition).
+
+EIGRP DUAL worked example:
+R1 has three paths to 10.5.5.0/24:
+- Via R2: RD 1000, total metric 2000.
+- Via R3: RD 1500, total metric 2500.
+- Via R4: RD 2200, total metric 2600.
+1. The lowest total metric is 2000 via R2, so R2 is the successor and the FD is 2000.
+2. R3 has RD 1500, which is less than the FD 2000, so R3 is a feasible successor.
+3. R4 has RD 2200, which is not less than 2000, so R4 is not a feasible successor.
+If R2 fails, R1 switches to R3 immediately. With no feasible successor, the route goes active and R1 sends queries to its neighbors.
+
+EIGRP neighbor requirements:
+Routers must be in the same autonomous system (AS) number, share the same subnet, and use matching K values and authentication. Hello interval is 5 seconds and hold time is 15 seconds on most LAN links.
+The hold time is three times the hello. On slow links (T1 or slower) the hello is 60 seconds and hold 180 seconds. Hello and hold timers do not need to match between neighbors.
+
+EIGRP unequal-cost load balancing (variance):
+The variance multiplier lets EIGRP use paths with a metric up to variance x FD, but only if they are feasible successors. Default variance is 1 (equal-cost only). In the example, "variance 2" allows metrics up to 4000. R3 (2500) is used. R4 (2600) is not, because it is not a feasible successor.
+Router(config-router)# variance 2
+
+EIGRP configuration:
+Router(config)# router eigrp 100
+Router(config-router)# eigrp router-id 1.1.1.1
+Router(config-router)# network 192.168.1.0 0.0.0.255
+Router(config-router)# passive-interface g0/2
+The number 100 is the AS number and must match on neighbors. The network command uses a wildcard mask.
+
+EIGRP verification:
+show ip eigrp neighbors
+show ip eigrp topology
+show ip route eigrp
+
+Router# show ip eigrp neighbors
+H  Address      Interface  Hold  Uptime    SRTT  RTO  Q Cnt  Seq Num
+0  10.1.1.2     Gi0/0      13    00:12:40  1     100  0      15
+Hold counts down from 15 and resets on each hello. Q Cnt should be 0.
+
+Router# show ip eigrp topology
+P 10.5.5.0/24, 1 successors, FD is 2000
+        via 10.1.1.2 (2000/1000), GigabitEthernet0/0
+        via 10.1.2.3 (2500/1500), GigabitEthernet0/1
+P means passive, which is stable. In (2000/1000) the first value is the total metric and the second is the RD.
+
+EIGRP troubleshooting:
+- No neighbor: check AS number, subnet, K-values, authentication, and passive-interface.
+- Route stuck in active (SIA): a neighbor did not answer a query in time.
+
+EIGRP vs OSPF:
+- EIGRP is advanced distance vector; OSPF is link state.
+- EIGRP AD 90; OSPF AD 110.
+- EIGRP supports unequal-cost load balancing; OSPF only equal-cost.
+
+CCNA exam tips for EIGRP:
+- Feasibility condition: RD must be less than FD.
+- Default K-values use bandwidth and delay only.
+- Variance only uses feasible successors.
+
+Common questions about EIGRP:
+Q: What is the administrative distance of EIGRP?
+A: Internal EIGRP routes have AD 90 and external routes have AD 170.
+
+Q: What is a feasible successor?
+A: It is a loop-free backup route whose reported distance is less than the feasible distance.
+
+Q: What are the default EIGRP hello and hold timers?
+A: On most LAN links the hello is 5 seconds and the hold time is 15 seconds.
+
+Q: What does the variance command do?
+A: It enables unequal-cost load balancing over feasible successors with a metric up to variance times the FD.
+
+Q: What must match for EIGRP neighbors?
+A: The AS number, subnet, K-values, and authentication must match.

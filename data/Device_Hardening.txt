@@ -1,0 +1,105 @@
+Device Hardening (Securing Cisco Routers and Switches)
+
+Device hardening means configuring routers and switches to reduce their attack surface.
+
+Device hardening of privileged access:
+The enable secret command stores the password as a strong hash and overrides enable password, which is stored in clear text. The service password-encryption command uses weak type 7 encryption that is easily reversed.
+Router(config)# enable secret Str0ngP@ss
+Router(config)# service password-encryption
+Router(config)# username admin secret Adm1nP@ss
+
+Device hardening with local user privilege levels:
+Cisco IOS has privilege levels from 0 to 15. Level 1 is user EXEC mode (the > prompt) and is the default for a normal login. Level 15 is privileged EXEC mode (the # prompt) with full access. A local user can be given a level directly.
+Router(config)# username admin privilege 15 secret Adm1nP@ss
+Router(config)# username helpdesk privilege 1 secret Help123
+With login local, admin goes straight to privileged EXEC, while helpdesk stays in user EXEC.
+
+Device hardening with AAA new-model:
+The aaa new-model command turns on the AAA framework, so logins can use a RADIUS or TACACS+ server with the local database as a backup. Always configure a login method list with it, or you can lock yourself out.
+Router(config)# aaa new-model
+Router(config)# aaa authentication login default group tacacs+ local
+
+Device hardening login protection and timeouts:
+Router(config)# login block-for 120 attempts 3 within 60
+Blocks logins for 120 seconds after 3 failures within 60 seconds.
+Router(config)# line vty 0 4
+Router(config-line)# exec-timeout 5 0
+Router(config)# banner motd #Authorized access only#
+
+Device hardening login banners:
+A banner warns users that only authorized access is allowed, which supports legal action against intruders. The MOTD banner is shown first, the login banner before the username prompt, and the exec banner after login. The # is a delimiter that marks the start and end of the text. Banners must never welcome users or reveal device details.
+Router(config)# banner login #Unauthorized access is prohibited#
+
+Device hardening of the console line:
+Anyone with physical access can use the console port, so protect it with a login and timeout.
+Router(config)# line con 0
+Router(config-line)# login local
+Router(config-line)# exec-timeout 5 0
+Router(config-line)# logging synchronous
+The exec-timeout 5 0 command logs out an idle session after 5 minutes.
+
+Device hardening by disabling unused services:
+Router(config)# no ip http server
+Router(config)# no cdp run
+Disable CDP globally or on untrusted interfaces with "no cdp enable", since it reveals device details.
+
+Device hardening by disabling Telnet:
+Telnet sends passwords in clear text on TCP port 23. The transport input ssh command on the VTY lines allows only SSH, so Telnet connections are refused. The default on many devices allows Telnet, so this must be set manually.
+
+Device hardening of unused switch ports:
+Switch(config)# interface range fa0/10 - 24
+Switch(config-if-range)# switchport access vlan 999
+Switch(config-if-range)# shutdown
+
+Device hardening with port security:
+Switch(config-if)# switchport mode access
+Switch(config-if)# switchport port-security
+Switch(config-if)# switchport port-security maximum 2
+Switch(config-if)# switchport port-security mac-address sticky
+Switch(config-if)# switchport port-security violation shutdown
+Sticky learning adds dynamic MACs to the running configuration.
+
+Port security violation modes in device hardening:
+- shutdown (default): err-disables the port, logs, and increments the violation counter.
+- restrict: drops frames from unknown MACs, logs, and increments the counter; the port stays up.
+- protect: drops frames silently with no log and no counter increase.
+Recover with shutdown then no shutdown, or automatically:
+Switch(config)# errdisable recovery cause psecure-violation
+
+Device hardening with SSH only on VTY lines:
+Router(config)# ip domain-name example.com
+Router(config)# crypto key generate rsa modulus 2048
+Router(config)# ip ssh version 2
+Router(config)# line vty 0 4
+Router(config-line)# transport input ssh
+Router(config-line)# login local
+
+Device hardening by restricting VTY with an ACL:
+Router(config)# access-list 10 permit 192.168.10.0 0.0.0.255
+Router(config)# line vty 0 4
+Router(config-line)# access-class 10 in
+
+Device hardening by keeping IOS updated:
+Install updated IOS images to fix known vulnerabilities.
+
+CCNA exam tips for device hardening:
+- enable secret is hashed; enable password and type 7 are weak.
+- transport input ssh disables Telnet on VTY lines.
+- Port security default violation mode is shutdown.
+
+Common questions about device hardening:
+
+Q: What is the difference between enable secret and enable password?
+A: Enable secret stores a strong hash and takes priority, while enable password is stored in clear text.
+
+Q: How do you disable Telnet on a Cisco router?
+A: Use transport input ssh on the VTY lines so only SSH is allowed.
+
+Q: What do privilege levels 1 and 15 mean?
+A: Level 1 is user EXEC mode with limited commands, and level 15 is privileged EXEC mode with full access.
+
+Q: Why use a login banner?
+A: A banner warns that unauthorized access is prohibited and supports legal action against intruders.
+
+Q: Why is service password-encryption considered weak?
+A: It uses type 7 encryption, which is easily reversed, so enable secret and username secret should be used instead.

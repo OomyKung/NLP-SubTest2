@@ -1,0 +1,93 @@
+EtherChannel
+
+EtherChannel is a link aggregation technology that bundles several physical Ethernet links into one logical link, called a port channel. Spanning Tree Protocol treats the whole bundle as a single interface, so none of the member links are blocked. This increases bandwidth and provides redundancy: if one member link fails, traffic continues over the remaining links without STP reconvergence.
+
+EtherChannel advantages:
+- Higher bandwidth by combining up to 8 active links.
+- Redundancy and fast failover between member links.
+- Load balancing across links based on source/destination MAC or IP addresses.
+- Configuration is applied once on the port-channel interface.
+An EtherChannel supports up to 8 active member links. For example, 8 x 1 Gbps links give a logical 8 Gbps port channel.
+
+EtherChannel requirements for member ports:
+All ports in an EtherChannel must have the same speed and duplex, the same switchport mode (access or trunk), the same access VLAN or the same allowed VLANs and native VLAN on trunks. If these settings do not match, the bundle will not form or ports will be suspended.
+Settings that must match on all member ports:
+- Speed and duplex.
+- Switchport mode: all access or all trunk.
+- Access VLAN on access ports.
+- Allowed VLAN list and native VLAN on trunk ports.
+- Layer 2 or Layer 3: all switchports or all routed ports.
+
+EtherChannel negotiation protocols:
+1. PAgP (Port Aggregation Protocol) - Cisco proprietary.
+   Modes: desirable (actively negotiates) and auto (waits for the other side).
+   desirable + desirable = channel, desirable + auto = channel, auto + auto = no channel.
+2. LACP (Link Aggregation Control Protocol) - IEEE 802.3ad open standard.
+   Modes: active (actively negotiates) and passive (waits).
+   active + active = channel, active + passive = channel, passive + passive = no channel.
+   LACP can have up to 16 ports configured, with 8 active and 8 standby.
+3. Static mode "on" - forces the channel without any negotiation. Both sides must be set to "on".
+
+EtherChannel channel-group mode combination results:
+- on + on = channel (static, no protocol).
+- on + active, passive, desirable or auto = no channel, because "on" sends no LACP or PAgP packets.
+- active + active or passive = LACP channel.
+- desirable + desirable or auto = PAgP channel.
+- passive + passive or auto + auto = no channel, because neither side starts negotiation.
+- LACP and PAgP cannot be mixed: active + desirable = no channel.
+
+EtherChannel LACP configuration example:
+Switch(config)# interface range gi0/1 - 2
+Switch(config-if-range)# channel-group 1 mode active
+Switch(config)# interface port-channel 1
+Switch(config-if)# switchport mode trunk
+
+Layer 3 EtherChannel configuration:
+A Layer 3 EtherChannel is a routed port channel with an IP address. Make the member ports routed ports with "no switchport" before adding them to the channel group, then put the IP address on the port-channel interface.
+Switch(config)# interface range gi0/3 - 4
+Switch(config-if-range)# no switchport
+Switch(config-if-range)# channel-group 2 mode active
+Switch(config)# interface port-channel 2
+Switch(config-if)# no switchport
+Switch(config-if)# ip address 10.0.0.1 255.255.255.252
+
+EtherChannel load balancing:
+Switch(config)# port-channel load-balance src-dst-ip
+EtherChannel does not split one frame or one flow across links. It hashes header fields to pick a member link, so one conversation always uses the same link. Methods include src-mac, dst-mac, src-dst-mac, src-ip, dst-ip, src-dst-ip, and on some platforms src-port, dst-port and src-dst-port. The default depends on the platform (src-mac on many Catalyst 2960 switches). Verify with "show etherchannel load-balance".
+
+EtherChannel verification:
+- show etherchannel summary: shows port channels, protocol, and member port flags. Flag "P" means bundled, "s" means suspended, "SU" means a Layer 2 channel that is in use.
+- show etherchannel port-channel
+- show interfaces port-channel 1
+Sample output of show etherchannel summary:
+Group  Port-channel  Protocol  Ports
+1      Po1(SU)       LACP      Gi0/1(P)  Gi0/2(P)
+2      Po2(RU)       LACP      Gi0/3(P)  Gi0/4(P)
+
+EtherChannel summary flags:
+- S = Layer 2, R = Layer 3, U = in use, D = down.
+- P = bundled in the port channel, I = stand-alone (not bundled), s = suspended, H = hot-standby (LACP only).
+Po1(SD) means a Layer 2 port channel that is down. A member with (I) or (s) usually has a mismatched setting or negotiation mode.
+
+EtherChannel troubleshooting:
+- Check that speed, duplex, VLANs and trunk mode match on every member port.
+- Check that both sides use compatible modes, such as active + passive, not passive + passive.
+- Do not mix LACP and PAgP, or "on" with a negotiating mode.
+- Change settings on the port-channel interface, not on individual members.
+
+CCNA exam tips for EtherChannel:
+- LACP is the open standard (active/passive); PAgP is Cisco (desirable/auto).
+- Up to 8 active links per EtherChannel.
+- STP sees the port channel as one link, so no member is blocked.
+
+Common questions about EtherChannel:
+Q: How many links can be active in an EtherChannel?
+A: Up to 8 physical links can be active in one EtherChannel.
+Q: What are the LACP modes?
+A: The LACP modes are active and passive; at least one side must be active.
+Q: Will auto + auto form a PAgP EtherChannel?
+A: No, auto + auto does not form a channel because neither side starts negotiation.
+Q: What does the flag P mean in show etherchannel summary?
+A: The flag P means the port is bundled in the port channel.
+Q: How do you create a Layer 3 EtherChannel?
+A: Use "no switchport" on the member ports and port-channel, then assign the IP address to the port-channel interface.

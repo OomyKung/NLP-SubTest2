@@ -1,0 +1,93 @@
+CDP and LLDP (Cisco Discovery Protocol and Link Layer Discovery Protocol)
+
+CDP and LLDP are Layer 2 discovery protocols. They let a device learn about the devices directly connected to it, such as the neighbor's name, model, IP address, and the port used on each side. Engineers use them to draw network diagrams, verify cabling, and troubleshoot.
+
+Purpose of CDP and LLDP discovery protocols:
+- Discover directly connected neighbors only; messages are not forwarded past the next device.
+- Find a neighbor's IP address so you can connect to it with SSH.
+Because they work at Layer 2, CDP and LLDP work even if no IP address is configured on the interface.
+
+CDP (Cisco Discovery Protocol) overview:
+CDP is a Cisco proprietary protocol, so it only runs on Cisco devices. It is enabled by default on Cisco routers and switches, globally and on every supported interface. CDP sends advertisements every 60 seconds by default. The CDP holdtime is 180 seconds, so a neighbor entry is removed if no advertisement is heard for 180 seconds.
+
+Information shared by CDP:
+- Device ID: the neighbor's hostname.
+- IP address: the neighbor's management or interface IP address.
+- Platform: the neighbor's model, for example ISR4321 or WS-C2960.
+- Capabilities: router (R), switch (S), host (H), IGMP (I), phone (P).
+- Local interface and remote port ID.
+- IOS version running on the neighbor.
+- Native VLAN and duplex, used to detect mismatches.
+
+CDP verification commands:
+- show cdp: global status, send interval (60 s), and holdtime (180 s).
+- show cdp neighbors: one line per neighbor with device ID, local interface, holdtime, capability, platform, and port ID. It does not show IP addresses.
+- show cdp neighbors detail: full details, including IP address, IOS version, native VLAN, and duplex.
+- show cdp entry *: same detail; replace * with a name to see one neighbor.
+
+CDP sample show cdp neighbors output:
+Device ID   Local Intrfce   Holdtme   Capability   Platform    Port ID
+R1          Gig 0/1         152       R B S I      ISR4321     Gig 0/0/0
+This shows that local port Gig 0/1 connects to port Gig 0/0/0 on router R1. The holdtime counts down from 180 and resets when a new CDP message arrives.
+
+CDP configuration commands:
+Switch(config)# no cdp run
+Switch(config)# cdp run
+Switch(config)# interface g0/5
+Switch(config-if)# no cdp enable
+Switch(config)# cdp timer 30
+Switch(config)# cdp holdtime 120
+The no cdp run command disables CDP on the whole device, and cdp run enables it again. The no cdp enable command disables CDP on one interface only. The cdp timer and cdp holdtime commands change the send interval and holdtime.
+
+LLDP (Link Layer Discovery Protocol) overview:
+LLDP is an open standard defined in IEEE 802.1AB, so it works between devices from different vendors. LLDP sends advertisements every 30 seconds by default, and the LLDP holdtime is 120 seconds. On Cisco IOS, LLDP is disabled by default and is enabled globally with the lldp run command. LLDP shares similar information to CDP, such as system name, port ID, management address, and capabilities.
+
+LLDP configuration commands:
+Switch(config)# lldp run
+Switch(config)# interface g0/5
+Switch(config-if)# no lldp transmit
+Switch(config-if)# no lldp receive
+LLDP sending and receiving are controlled separately on each interface. The lldp transmit command lets the port send LLDP messages, and lldp receive lets it process received ones.
+
+LLDP verification commands:
+- show lldp: shows whether LLDP is running and its timers.
+- show lldp neighbors: one line per neighbor with device ID, local interface, holdtime, capability, and port ID.
+- show lldp neighbors detail: adds the management address and system description.
+
+CDP vs LLDP comparison:
+- Standard: CDP is Cisco proprietary; LLDP is IEEE 802.1AB and multi-vendor.
+- Default on Cisco IOS: CDP enabled; LLDP disabled.
+- Timers: CDP 60 s send and 180 s holdtime; LLDP 30 s send and 120 s holdtime.
+- Global enable: cdp run vs lldp run.
+- Interface control: cdp enable vs lldp transmit and lldp receive.
+
+Security considerations for CDP and LLDP:
+CDP and LLDP messages are sent in clear text without authentication. An attacker on a switch port can capture them and learn device names, IP addresses, models, and IOS versions. Best practice is to disable them on interfaces facing untrusted networks, such as Internet links and user ports, and keep them on links between your own devices. Cisco IP phones use CDP to learn the voice VLAN, so keep CDP on IP phone ports.
+
+Troubleshooting CDP and LLDP:
+- No neighbors listed: check that the link is up and the protocol is enabled globally and on the interface; LLDP needs lldp run.
+- A non-Cisco neighbor is missing: CDP is Cisco only, so enable LLDP on both sides.
+- The %CDP-4-NATIVE_VLAN_MISMATCH message means the two ends of a trunk use different native VLANs.
+
+CCNA exam tips for CDP and LLDP:
+- Remember the timers: CDP 60 and 180 seconds, LLDP 30 and 120 seconds.
+- show cdp neighbors does not display IP addresses; use show cdp neighbors detail.
+- LLDP is off by default on Cisco IOS; enable it with lldp run.
+- no cdp run is global, no cdp enable is per interface.
+
+Common questions about CDP and LLDP:
+
+Q: What is the difference between CDP and LLDP?
+A: CDP is a Cisco proprietary discovery protocol, while LLDP is the IEEE 802.1AB open standard that works between different vendors.
+
+Q: What are the default CDP and LLDP timers?
+A: CDP sends every 60 seconds with a 180 second holdtime, and LLDP sends every 30 seconds with a 120 second holdtime.
+
+Q: Which command shows the IP address of a CDP neighbor?
+A: The show cdp neighbors detail command or show cdp entry * shows the neighbor IP address and IOS version.
+
+Q: How do you enable LLDP on a Cisco switch?
+A: Use the global command lldp run, because LLDP is disabled by default on Cisco IOS.
+
+Q: How do you disable CDP on only one interface?
+A: Use the no cdp enable command in interface configuration mode; no cdp run disables CDP on the whole device.

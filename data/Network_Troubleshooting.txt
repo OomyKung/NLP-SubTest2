@@ -1,0 +1,107 @@
+Network Troubleshooting
+
+Troubleshooting is the process of finding and fixing network problems in a structured way. Using a methodology saves time and avoids random changes that can create new issues.
+
+General network troubleshooting process:
+1. Define the problem and gather symptoms from users and devices.
+2. Gather information using show commands and logs.
+3. Analyze the information and establish a theory of the probable cause.
+4. Test the theory and create a plan of action.
+5. Implement the solution.
+6. Verify full system functionality.
+7. Document the findings, actions, and outcome.
+
+Network troubleshooting approaches based on the OSI model:
+- Bottom-up: start at the Physical layer and move up. Good when a physical problem is suspected.
+- Top-down: start at the Application layer and move down.
+- Divide-and-conquer: start in the middle, often with a ping at Layer 3, then move up or down depending on the result.
+- Follow-the-path: trace the path that traffic takes from source to destination.
+- Compare configurations: compare a working device with a failing one.
+- Swap components: replace a suspected cable, port, or device with a known good one to see if the problem moves.
+
+Network troubleshooting interface status combinations:
+The show ip interface brief output has a Status column (Layer 1) and a Protocol column (Layer 2).
+- up/up: the interface is working normally.
+- up/down: Layer 1 is fine but Layer 2 failed, such as an encapsulation or keepalive mismatch.
+- down/down: a Layer 1 problem, such as a bad or unplugged cable, or the far end is shut down.
+- administratively down/down: the interface was disabled with the shutdown command. Fix it with no shutdown.
+
+Network troubleshooting problems by layer:
+- Layer 1: bad cables, unplugged ports, speed or duplex mismatch, interface shutdown.
+- Layer 2: wrong VLAN, trunk not forming, native VLAN mismatch, STP blocking, port in err-disabled state.
+- Layer 3: wrong IP address or subnet mask, wrong default gateway, missing routes, routing neighbor not forming.
+- Layer 4 and above: ACL blocking traffic, NAT misconfiguration, DNS failure.
+
+Useful network troubleshooting commands:
+- ping: tests basic reachability using ICMP echo.
+- traceroute (tracert on Windows): shows each hop on the path and where traffic stops.
+- show ip interface brief: quick status of interfaces. "administratively down" means the interface is shut down. "down/down" usually indicates a Layer 1 problem. "up/down" usually indicates a Layer 2 problem such as an encapsulation mismatch.
+- show interfaces: shows errors such as CRC errors, collisions, and duplex.
+- show ip route: checks routing table entries.
+- show cdp neighbors: discovers directly connected Cisco devices.
+- show running-config: reviews the current configuration.
+- ipconfig /all (Windows host): checks the host IP settings.
+
+Network troubleshooting ping output symbols:
+- ! (exclamation mark): an echo reply was received, success.
+- . (period): timed out waiting for a reply.
+- U: destination unreachable was received.
+- Q: source quench (destination too busy).
+- M: could not fragment.
+- ?: unknown packet type.
+- &: packet lifetime exceeded.
+The first ping often shows .!!!! because the first packet is lost while ARP resolves the MAC address.
+
+Network troubleshooting traceroute output symbols:
+- * (asterisk): the probe timed out at that hop.
+- !H: host unreachable.
+- !N: network unreachable.
+- !P: protocol unreachable.
+- !A: administratively prohibited, often caused by an ACL.
+
+Network troubleshooting show commands checklist:
+- show interfaces status and show vlan brief: check port VLAN and status on a switch.
+- show interfaces trunk: check trunks and allowed VLANs.
+- show ip interface: check which ACL is applied to an interface.
+- show access-lists: check ACL hit counters.
+- show ip ospf neighbor: check routing neighbors.
+
+Network troubleshooting common issues:
+- Duplex mismatch: one side is full duplex and the other half duplex. The half-duplex side shows late collisions and the full-duplex side shows CRC errors and runts. Set both sides to the same speed and duplex, or both to auto.
+- Wrong VLAN: the port is in a different VLAN than the host subnet. Fix it with switchport access vlan.
+
+Network troubleshooting gateway and ACL issues:
+- Wrong default gateway: the host can reach its own subnet but not remote networks. Check it with ipconfig /all.
+- ACL blocking: ping fails with U or traceroute shows !A. Check show access-lists for matches on deny entries.
+
+Example: if a PC cannot reach the internet, first ping its default gateway. If the gateway responds, ping an external IP address. If the IP works but names do not, the issue is likely DNS.
+
+Network troubleshooting err-disabled port recovery:
+Switch(config-if)# shutdown
+Switch(config-if)# no shutdown
+
+Network troubleshooting: top-down vs bottom-up:
+- Top-down starts with the application, useful when users report one application failing.
+- Bottom-up starts with cables, useful when the link LED is off.
+- Divide-and-conquer is often fastest because one ping rules out half the layers.
+
+CCNA exam tips for network troubleshooting:
+- up/down points to Layer 2; down/down points to Layer 1.
+- Know the ping symbols ! . and U.
+- Duplex mismatch causes late collisions and CRC errors.
+
+Common questions about network troubleshooting:
+Q: What does up/down mean in show ip interface brief?
+A: Up/down means Layer 1 is up but the Layer 2 protocol is down, such as an encapsulation mismatch.
+
+Q: What does a period mean in ping output?
+A: A period means the request timed out with no reply.
+
+Q: What does U mean in ping output?
+A: U means a destination unreachable message was received.
+
+Q: What are the symptoms of a duplex mismatch?
+A: A duplex mismatch causes late collisions on the half-duplex side and CRC errors on the full-duplex side.
+
+Q: What is the divide-and-conquer approach?
+A: Divide-and-conquer starts in the middle of the OSI model, often with a ping, then moves up or down.

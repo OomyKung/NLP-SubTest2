@@ -1,0 +1,86 @@
+Syslog (System Logging)
+
+Syslog is a standard protocol for sending system messages from network devices to a central place. Cisco routers and switches generate syslog messages for events such as interfaces going up or down, configuration changes, and errors. Collecting syslog messages on a server helps administrators troubleshoot problems and keep a history of events.
+
+Syslog severity levels:
+- 0 Emergency: system is unusable.
+- 1 Alert: immediate action needed.
+- 2 Critical: critical condition.
+- 3 Error: error condition.
+- 4 Warning: warning condition.
+- 5 Notification: normal but significant event.
+- 6 Informational: informational message.
+- 7 Debugging: debug output.
+A lower number means a more serious message. When a level is set, messages at that level and all lower numbers are sent. For example, logging trap warnings sends levels 0 to 4.
+Mnemonic: "Every Awesome Cisco Engineer Will Need Ice cream Daily".
+
+Syslog message format:
+seq-number: timestamp: %FACILITY-SEVERITY-MNEMONIC: description
+Example:
+000045: *Mar 1 10:15:32.123: %LINK-3-UPDOWN: Interface GigabitEthernet0/1, changed state to down
+Here the facility is LINK, the severity is 3 (Error), and the mnemonic is UPDOWN. Another common example is %LINEPROTO-5-UPDOWN.
+
+Syslog sample log messages explained:
+- %SYS-5-CONFIG_I: Configured from console by admin on vty0 (10.1.1.5). Severity 5 (Notification): a user changed the configuration.
+- %OSPF-5-ADJCHG: Nbr 2.2.2.2 on Gi0/0 from LOADING to FULL, Loading Done. Severity 5: an OSPF neighbor became fully adjacent.
+- %PM-4-ERR_DISABLE: psecure-violation error detected on Fa0/1. Severity 4 (Warning): port security err-disabled a port.
+- %LINEPROTO-5-UPDOWN: Line protocol on Interface Gi0/1, changed state to up. Severity 5: Layer 2 is up.
+
+Syslog destinations:
+- Console: shown on the console line, enabled by default.
+- Buffer: stored in the device RAM, viewed with show logging.
+- Terminal monitor: shown on VTY sessions such as SSH after the terminal monitor command.
+- Syslog server: sent over the network using UDP port 514.
+
+Syslog configuration:
+Router(config)# service timestamps log datetime msec
+Router(config)# logging host 192.168.1.100
+Router(config)# logging trap warnings
+Router(config)# logging buffered 16384 informational
+Router(config)# logging console warnings
+Router# terminal monitor
+
+Syslog configuration commands explained:
+The service timestamps command adds the date and time with milliseconds to each message. Logging host sets the syslog server address, and logging trap sets the severity level sent to that server. Logging buffered stores messages in RAM, and logging console sets the level shown on the console.
+By default the console shows all levels (0 to 7, debugging) and the syslog server receives levels 0 to 6 (informational).
+
+Syslog logging synchronous:
+Log messages can appear in the middle of a command you are typing, which makes it hard to read. The logging synchronous command, configured under a line, reprints your partly typed command on a new line after the message.
+Router(config)# line con 0
+Router(config-line)# logging synchronous
+It can also be set under line vty 0 4.
+
+Syslog debug and terminal monitor:
+Debug commands show real-time information and create level 7 (Debugging) messages, for example debug ip ospf adj. Debugging uses a lot of CPU, so use it carefully and turn it off with undebug all (or no debug all).
+By default, log and debug messages appear only on the console. When connected by SSH or Telnet, you must type terminal monitor to see them in that session. The terminal no monitor command stops them. The terminal monitor setting lasts only for the current session.
+
+Syslog verification:
+Router# show logging
+This displays the logging settings for each destination, the number of messages logged, and the contents of the logging buffer. Configure NTP so that timestamps are accurate across all devices.
+
+Syslog troubleshooting and common mistakes:
+- No messages on an SSH session: terminal monitor was not entered.
+- Server receives nothing: check logging host, the logging trap level, and that UDP 514 is not blocked.
+- Wrong times in messages: configure service timestamps and NTP.
+
+CCNA exam tips for Syslog:
+- Learn the eight levels in order, 0 Emergency to 7 Debugging.
+- A configured level includes all more severe (lower number) levels.
+- Syslog uses UDP port 514.
+
+Common questions about Syslog:
+
+Q: What port does Syslog use?
+A: Syslog uses UDP port 514 to send messages to a syslog server.
+
+Q: What does logging trap warnings send?
+A: It sends levels 0 to 4, meaning Emergency, Alert, Critical, Error, and Warning messages.
+
+Q: Why do I not see log messages in my SSH session?
+A: Messages appear only on the console by default, so enter terminal monitor in the SSH session.
+
+Q: What does logging synchronous do?
+A: It stops log messages from interrupting your typing by reprinting the command line after each message.
+
+Q: What does the 5 in %LINEPROTO-5-UPDOWN mean?
+A: The 5 is the severity level, which is Notification.

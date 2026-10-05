@@ -1,0 +1,87 @@
+FHRP (First Hop Redundancy Protocol)
+
+A First Hop Redundancy Protocol lets two or more routers share one virtual default gateway address. Hosts normally have only one default gateway configured. If that router fails, the hosts lose access to other networks even when another router is available. FHRP solves this by making a backup router take over the gateway role automatically. The three FHRPs on the CCNA are HSRP, VRRP, and GLBP.
+
+FHRP key terms:
+- Virtual IP address: the shared default gateway address configured on hosts.
+- Virtual MAC address: the MAC address that answers ARP requests for the virtual IP.
+- Active or master router: the router that currently forwards traffic for the virtual IP.
+- Standby or backup router: the router ready to take over if the active router fails.
+- Priority: a value used to choose the active router. Higher is better.
+- Preemption: lets a higher priority router take back the active role when it comes online.
+
+How FHRP works:
+1. The routers in a group agree on a virtual IP and a virtual MAC address.
+2. Hosts use the virtual IP as their default gateway and learn the virtual MAC through ARP.
+3. The active router forwards frames sent to the virtual MAC.
+4. The routers exchange hello messages. If the standby router stops hearing hellos, it becomes active.
+5. Hosts keep the same gateway IP and MAC, so failover is transparent to them.
+
+HSRP (Hot Standby Router Protocol):
+HSRP is Cisco proprietary. One router is active and one is standby; other routers in the group listen. The default HSRP priority is 100, and the highest priority wins. If priorities tie, the highest interface IP address wins. Preemption is disabled by default. The default hello timer is 3 seconds and the hold timer is 10 seconds.
+
+HSRP states:
+Initial, Learn, Listen, Speak, Standby, Active. In Learn the router has not yet learned the virtual IP. In Listen it knows the virtual IP but is neither active nor standby. In Speak it sends hellos and takes part in the election. Standby is the backup, and Active forwards traffic.
+
+HSRP versions:
+- HSRPv1 uses multicast 224.0.0.2, group numbers 0 to 255, and virtual MAC 0000.0C07.ACxx, where xx is the group number in hex.
+- HSRPv2 uses multicast 224.0.0.102, group numbers 0 to 4095, virtual MAC 0000.0C9F.Fxxx, and supports IPv6.
+Enable version 2 with "standby version 2".
+
+HSRP configuration example:
+R1(config)# interface g0/0
+R1(config-if)# ip address 192.168.1.2 255.255.255.0
+R1(config-if)# standby 1 ip 192.168.1.254
+R1(config-if)# standby 1 priority 110
+R1(config-if)# standby 1 preempt
+R2 uses 192.168.1.3 with "standby 1 ip 192.168.1.254" and keeps the default priority 100. R1 becomes active because 110 is higher than 100. Hosts use 192.168.1.254 as the default gateway.
+
+HSRP verification:
+R1# show standby brief
+Interface   Grp  Pri P State   Active   Standby      Virtual IP
+Gi0/0       1    110 P Active  local    192.168.1.3  192.168.1.254
+The P means preempt is enabled. Check that one router is Active, the other is Standby, and the virtual IP matches on both. "show standby" gives full detail including timers and the virtual MAC.
+
+VRRP (Virtual Router Redundancy Protocol):
+VRRP is an open standard defined by the IETF (RFC 5798 for VRRPv3). It uses a master router and one or more backup routers. The default priority is 100, and preemption is enabled by default. VRRP uses multicast 224.0.0.18 and virtual MAC 0000.5E00.01xx. VRRP can use the real interface IP of a router as the virtual IP.
+
+GLBP (Gateway Load Balancing Protocol):
+GLBP is Cisco proprietary and adds load balancing. One Active Virtual Gateway (AVG) answers ARP requests for the virtual IP and hands out different virtual MAC addresses. Up to four Active Virtual Forwarders (AVF) forward traffic, so all routers in the group carry traffic at the same time. GLBP uses multicast 224.0.0.102.
+
+HSRP vs VRRP vs GLBP comparison:
+- HSRP: Cisco proprietary, active/standby, priority 100, preempt off by default, no load balancing within one group.
+- VRRP: open standard, master/backup, priority 100, preempt on by default, works with multiple vendors.
+- GLBP: Cisco proprietary, AVG and AVFs, load balances across up to four routers in one group.
+- HSRP and VRRP can share load only by configuring multiple groups with different active routers per VLAN.
+
+FHRP troubleshooting and common mistakes:
+- Virtual IP or group number does not match on the routers, so both become active.
+- Preempt not configured, so the higher priority router does not take back the active role after a reload.
+- Hosts configured with a real router IP instead of the virtual IP as the gateway.
+- Hello packets blocked by an ACL, causing both routers to become active.
+- HSRP version mismatch between routers.
+
+CCNA exam tips for FHRP:
+- HSRP default priority is 100, the highest priority wins, and preempt is off by default.
+- VRRP is the open standard option; HSRP and GLBP are Cisco proprietary.
+- GLBP is the only one of the three that load balances within a single group.
+- Know the HSRPv1 virtual MAC format 0000.0C07.ACxx.
+
+Common questions about FHRP:
+Q: Why do we need a First Hop Redundancy Protocol?
+A: Hosts have one default gateway, so FHRP lets a backup router take over that gateway address if the primary router fails.
+
+Q: What is the default HSRP priority?
+A: The default HSRP priority is 100, and the router with the highest priority becomes active.
+
+Q: Is HSRP preemption enabled by default?
+A: No, HSRP preemption is disabled by default and must be enabled with "standby <group> preempt".
+
+Q: What is the difference between HSRP and VRRP?
+A: HSRP is Cisco proprietary with active and standby roles, while VRRP is an open standard with master and backup roles and preemption enabled by default.
+
+Q: Which FHRP provides load balancing?
+A: GLBP provides load balancing by giving different hosts different virtual MAC addresses.
+
+Q: What are the HSRP states?
+A: The HSRP states are Initial, Learn, Listen, Speak, Standby, and Active.

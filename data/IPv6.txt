@@ -1,0 +1,76 @@
+IPv6 (Internet Protocol version 6)
+
+IPv6 is the replacement for IPv4 and uses 128-bit addresses instead of 32-bit addresses. An IPv6 address is written as 8 groups of 4 hexadecimal digits called hextets, separated by colons, for example 2001:0DB8:0000:0000:0000:0000:0000:0001. IPv6 provides a huge address space, simpler headers, and built-in autoconfiguration.
+
+IPv6 abbreviation rules:
+- Rule 1: Drop leading zeros in each hextet. 0DB8 becomes DB8 and 0000 becomes 0.
+- Rule 2: Replace one run of consecutive all-zero hextets with a double colon (::). The :: can be used only once in an address.
+- Example: 2001:0DB8:0000:0000:0000:0000:0000:0001 becomes 2001:DB8::1.
+
+IPv6 address types:
+- Global unicast (2000::/3): public, routable addresses on the Internet.
+- Unique local (FC00::/7): private addresses, similar to IPv4 RFC 1918.
+- Link-local (FE80::/10): created automatically on every IPv6 interface, valid only on the local link, used as the next hop by routing protocols.
+- Multicast (FF00::/8): FF02::1 is all nodes and FF02::2 is all routers.
+- Loopback ::1 and unspecified address ::.
+IPv6 has no broadcast address. The typical prefix length for a LAN is /64.
+
+IPv6 anycast addresses:
+An anycast address is one unicast address assigned to several devices. Routers deliver a packet sent to an anycast address to the nearest device that has it, based on the routing metric. Anycast has no special prefix; it is taken from the unicast range and marked with the anycast keyword, for example "ipv6 address 2001:db8:5::1/64 anycast". It is often used for DNS servers.
+
+IPv6 solicited-node multicast address:
+Every unicast address automatically joins a solicited-node multicast group, FF02::1:FF00:0/104 plus the last 24 bits (6 hex digits) of the unicast address, written FF02::1:FFxx:xxxx. NDP sends Neighbor Solicitations to this group instead of a broadcast, so only the target host processes them. Example: 2001:DB8:1::1 joins FF02::1:FF00:1, and 2001:DB8:1:0:21A:2BFF:FE3C:4D5E joins FF02::1:FF3C:4D5E.
+
+IPv6 header compared with the IPv4 header:
+- The IPv6 header has a fixed size of 40 bytes. The IPv4 header is 20 to 60 bytes because of options.
+- IPv6 header fields: Version (6), Traffic Class, Flow Label, Payload Length, Next Header, Hop Limit, Source Address and Destination Address.
+- Hop Limit replaces the IPv4 TTL, Next Header replaces the Protocol field, and Traffic Class replaces ToS/DSCP.
+- IPv6 removes the header checksum and the fragmentation fields. Routers never fragment IPv6 packets; only the sending host fragments, using an extension header.
+- The 20-bit Flow Label is new and identifies packets of the same flow.
+
+IPv6 EUI-64 process:
+A host can build its 64-bit interface ID from its 48-bit MAC address. Split the MAC in half, insert FFFE in the middle, and flip the 7th bit of the first byte.
+Example: MAC 00-1A-2B-3C-4D-5E becomes 001A:2BFF:FE3C:4D5E, then flipping the 7th bit changes 00 to 02, giving 021A:2BFF:FE3C:4D5E. With prefix 2001:DB8:1::/64 the address is 2001:DB8:1:0:21A:2BFF:FE3C:4D5E.
+
+IPv6 SLAAC and DHCPv6:
+With SLAAC, a host learns the prefix from a router advertisement and builds its own address. Stateful DHCPv6 assigns addresses from a server, while stateless DHCPv6 gives only extra information such as DNS servers.
+
+IPv6 NDP (Neighbor Discovery Protocol):
+NDP uses ICMPv6 and replaces ARP. Neighbor Solicitation (NS) and Neighbor Advertisement (NA) resolve MAC addresses. Router Solicitation (RS) and Router Advertisement (RA) help hosts find routers and prefixes.
+
+IPv6 transition: dual stack and tunneling:
+- Dual stack: a device runs IPv4 and IPv6 at the same time on the same interface. It is the most common and preferred transition method.
+- Tunneling: IPv6 packets are encapsulated inside IPv4 packets to cross an IPv4-only network, for example manual 6in4 or GRE tunnels.
+- Translation (NAT64): converts between IPv6 and IPv4 so IPv6-only hosts can reach IPv4-only hosts.
+
+IPv6 configuration:
+Router(config)# ipv6 unicast-routing
+Router(config)# interface g0/0
+Router(config-if)# ipv6 address 2001:db8:1::1/64
+Router(config-if)# ipv6 address 2001:db8:2::/64 eui-64
+Router(config)# ipv6 route 2001:db8:3::/64 2001:db8:1::2
+Verify with show ipv6 interface brief and show ipv6 route.
+
+IPv6 verification output:
+Router# show ipv6 interface brief
+GigabitEthernet0/0     [up/up]
+    FE80::1
+    2001:DB8:1::1
+Look for [up/up], the automatic link-local address (FE80::) and the global address. The command "show ipv6 interface g0/0" also lists joined groups such as FF02::1, FF02::2 and FF02::1:FF00:1. In "show ipv6 route", C marks connected prefixes, L marks the local /128 address, and S marks static routes.
+
+CCNA exam tips for IPv6:
+- Practice shortening addresses; :: may appear only once.
+- Without "ipv6 unicast-routing" a router does not forward IPv6 or send RAs.
+- Know FE80::/10, FC00::/7, 2000::/3 and FF00::/8 by heart.
+
+Common questions about IPv6:
+Q: How long is an IPv6 address?
+A: An IPv6 address is 128 bits long, written as 8 hextets.
+Q: Does IPv6 use broadcast?
+A: No, IPv6 has no broadcast; it uses multicast, such as FF02::1 for all nodes.
+Q: What is the solicited-node multicast address used for?
+A: It is used by NDP Neighbor Solicitation to find a MAC address without disturbing every host, replacing the ARP broadcast.
+Q: How big is the IPv6 header?
+A: The IPv6 base header is a fixed 40 bytes.
+Q: What is dual stack?
+A: Dual stack means running IPv4 and IPv6 at the same time on a device.

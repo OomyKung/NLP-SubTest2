@@ -1,0 +1,98 @@
+NAT (Network Address Translation)
+
+NAT translates private IPv4 addresses used inside an organization into public IPv4 addresses used on the internet. It was created to slow down IPv4 address exhaustion and also hides the internal addressing scheme. Private address ranges defined in RFC 1918 are 10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16.
+
+NAT terminology:
+- Inside local: the private IP address of an internal host.
+- Inside global: the public IP address that represents the internal host on the outside.
+- Outside global: the real public IP address of an external host.
+- Outside local: the address of the external host as seen from the inside network.
+"Inside" and "outside" describe where the host is. "Local" and "global" describe where the address is seen.
+
+NAT terminology example:
+PC1 (192.168.1.10) browses to a web server at 8.8.8.8. The router translates PC1 to 203.0.113.5.
+- Inside local = 192.168.1.10 (PC1's private address).
+- Inside global = 203.0.113.5 (PC1 as seen on the internet).
+- Outside global = 8.8.8.8 (the server's real address).
+- Outside local = 8.8.8.8 (the same, because the outside address is not translated in normal NAT).
+
+How NAT works:
+1. A packet from an inside host arrives on the "ip nat inside" interface.
+2. The router checks that the source matches the NAT rule (ACL or static entry).
+3. It replaces the inside local source address with an inside global address and records this in the NAT table.
+4. The packet leaves the "ip nat outside" interface.
+5. Return traffic is matched in the NAT table and the destination is changed back to the inside local address.
+
+Types of NAT:
+1. Static NAT: a one-to-one permanent mapping between one inside local address and one inside global address. Commonly used for servers that must be reachable from the internet.
+Router(config)# ip nat inside source static 192.168.1.10 203.0.113.10
+
+2. Dynamic NAT: maps inside local addresses to a pool of public addresses on a first-come, first-served basis. If the pool runs out, new hosts cannot be translated.
+Router(config)# ip nat pool PUBLIC 203.0.113.20 203.0.113.30 netmask 255.255.255.0
+Router(config)# access-list 1 permit 192.168.1.0 0.0.0.255
+Router(config)# ip nat inside source list 1 pool PUBLIC
+The pool here holds 11 addresses, so at most 11 inside hosts can be translated at the same time.
+
+3. PAT (Port Address Translation), also called NAT overload: many inside hosts share a single public IP address. The router tracks each session using unique source port numbers. PAT is the most common type used in homes and small offices.
+Router(config)# ip nat inside source list 1 interface g0/1 overload
+PAT can also use a pool: "ip nat inside source list 1 pool PUBLIC overload".
+
+NAT interface roles:
+Every NAT configuration must mark interfaces as inside or outside.
+Router(config)# interface g0/0
+Router(config-if)# ip nat inside
+Router(config)# interface g0/1
+Router(config-if)# ip nat outside
+
+NAT advantages and disadvantages:
+Advantages: conserves public addresses, hides internal hosts, and simplifies changing ISPs.
+Disadvantages: breaks end-to-end connectivity, adds processing delay, complicates tunneling protocols such as IPsec, and makes tracing hosts harder.
+
+NAT verification and troubleshooting:
+- show ip nat translations
+- show ip nat statistics
+- clear ip nat translation *
+- debug ip nat
+Common errors are swapped inside/outside interfaces, an ACL that does not match the inside subnet, or a missing "overload" keyword.
+
+Example of show ip nat translations output with PAT:
+Router# show ip nat translations
+Pro  Inside global      Inside local        Outside local    Outside global
+tcp  203.0.113.5:1025   192.168.1.10:1025   8.8.8.8:80       8.8.8.8:80
+tcp  203.0.113.5:1026   192.168.1.11:1025   8.8.8.8:80       8.8.8.8:80
+Both PCs share 203.0.113.5. The router changed the second PC's port to 1026 to keep sessions unique. A static NAT entry shows "---" in the protocol column and stays in the table permanently.
+
+NAT clearing translations:
+"clear ip nat translation *" removes all dynamic entries. Use it after changing the NAT ACL or pool, because old entries stay until they time out. Static entries are not removed. "show ip nat statistics" shows hits, misses, and which interfaces are inside and outside.
+
+NAT troubleshooting steps:
+- No translations: check "ip nat inside" and "ip nat outside" on the correct interfaces.
+- Check that the ACL permits the inside local subnet. A wrong wildcard mask is common.
+- Dynamic NAT failures with many misses usually mean the pool is exhausted; add overload.
+- Make sure the router has a route to the internet, usually a default route.
+
+Static NAT vs dynamic NAT vs PAT:
+- Static NAT: one-to-one, permanent, allows inbound connections to servers.
+- Dynamic NAT: one-to-one from a pool, temporary, limited by pool size.
+- PAT: many-to-one using port numbers, the most address-efficient.
+
+CCNA exam tips for NAT:
+- Inside local is the private address; inside global is the public address of the inside host.
+- PAT uses the "overload" keyword.
+- Static NAT is used for servers that must be reached from outside.
+
+Common questions about NAT:
+Q: What is the difference between inside local and inside global?
+A: Inside local is the private address of the inside host, and inside global is the public address that represents it outside.
+
+Q: What is PAT?
+A: PAT, or NAT overload, lets many inside hosts share one public IP address by using different port numbers.
+
+Q: Which command shows the current NAT translations?
+A: The "show ip nat translations" command shows the NAT table.
+
+Q: How do you clear dynamic NAT entries?
+A: Use "clear ip nat translation *" to remove all dynamic translations.
+
+Q: Why is NAT not translating my traffic?
+A: Usually the inside and outside interfaces are swapped or missing, or the ACL does not match the inside subnet.
